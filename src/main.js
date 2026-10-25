@@ -1,6 +1,6 @@
 // Build-A-Bot: The Cybernetic AI Deployment Fabricator Main Orchestrator
 import './style.css';
-import { HEAD_PARTS, BODY_PARTS, HEART_PARTS, FEET_PARTS, GPU_PARTS, ACCESSORY_PARTS, generateFunnyName, normalizeConfig, estimateVram, findPart, isHeartCompatible, isHeadGpuCompatible } from './botParts.js';
+import { HEAD_PARTS, BODY_PARTS, HEART_PARTS, FEET_PARTS, GPU_PARTS, SOURCE_PARTS, ACCESSORY_PARTS, generateFunnyName, normalizeConfig, estimateVram, findPart, isHeartCompatible, isHeadGpuCompatible } from './botParts.js';
 import { renderBotSvg } from './botRenderer.js';
 import { generateBundle } from './dockerGenerator.js';
 import { downloadZipBundle, sendEmailRecipe, decodeConfig, buildShareUrl, openMailtoWithLink, shareZip } from './delivery.js';
@@ -16,6 +16,7 @@ const state = {
     heartId: 'qwen3',
     feetId: 'mcp-deck',
     gpuId: 'nvidia',
+    sourceId: 'internet',
     accessories: ['rubber-duck']
   },
   activeFile: 'docker-compose.yml',
@@ -129,11 +130,11 @@ function updateStats() {
 
   // Combined CTF Prowess calculation
   const ctfProwess = Math.min(99, Math.round((head.ctfProwess + body.ctfProwess + heart.ctfProwess + feet.ctfProwess) / 4));
-  el.statCtf.textContent = `${ctfProwess}% [L33T]`;
+  el.statCtf.textContent = `${ctfProwess}%`;
   el.barCtf.style.width = `${ctfProwess}%`;
 
   // Ports display
-  el.specPorts.textContent = [`:${body.defaultPort}`, head.defaultPort ? `:${head.defaultPort}` : null, `:${feet.port}`, ':8088', ':9090'].filter(Boolean).join(', ');
+  el.specPorts.textContent = [`:${body.defaultPort}`, head.defaultPort ? `:${head.defaultPort}` : null, `:${feet.port}`].filter(Boolean).join(', ');
 
   // Update Mentor Commentary Bubble
   const comment = glitchAssistant.getBuildCommentary(state.botConfig, {
@@ -161,6 +162,12 @@ function incompatibleReason(slotKey, part) {
   if (slotKey === 'headId' && !isHeadGpuCompatible(part, cfg.gpuId)) {
     return `Not supported with ${findPart(GPU_PARTS, cfg.gpuId).short}`;
   }
+  if (slotKey === 'sourceId' && part.id === 'share' && head.engine === 'cloud') {
+    return 'Cloud models are not downloaded';
+  }
+  if (slotKey === 'headId' && part.engine === 'cloud' && cfg.sourceId === 'share') {
+    return 'Model Source is set to Network share';
+  }
   if (slotKey === 'gpuId' && !isHeadGpuCompatible(head, part.id)) {
     return `${head.short} doesn't support this`;
   }
@@ -175,6 +182,7 @@ function renderSlots() {
     { key: 'heartId', title: 'HEART // POWER CORE', icon: '❤️', parts: HEART_PARTS },
     { key: 'feetId', title: 'FEET // MCP TOOLS', icon: '🦿', parts: FEET_PARTS },
     { key: 'gpuId', title: 'POWER SUPPLY // GPU', icon: '🔋', parts: GPU_PARTS },
+    { key: 'sourceId', title: 'MODEL SOURCE // SUPPLY LINE', icon: '📦', parts: SOURCE_PARTS },
     { key: 'accessories', title: 'ACCESSORIES // MODS', icon: '🎩', parts: ACCESSORY_PARTS, isMulti: true }
   ];
 

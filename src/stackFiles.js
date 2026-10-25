@@ -77,6 +77,7 @@ if __name__ == "__main__":
 
 export function buildSupportFiles(stack, botName) {
   const { head, heart, body, feet, gpu, llm, cfg } = stack;
+  const share = cfg.sourceId === 'share';
   const eps = mcpEndpoints(cfg);
   const files = {};
 
@@ -102,10 +103,11 @@ export function buildSupportFiles(stack, botName) {
     '# Edit values here, then run:  docker compose up -d',
     '# ==============================================================================',
     '',
-    '# Which network interface to publish ports on.',
-    '#   0.0.0.0   = reachable from other machines on your network (allow it in your firewall)',
-    '#   127.0.0.1 = this computer only',
-    'BIND_ADDR=0.0.0.0',
+    '# Who can reach these services:',
+    '#   127.0.0.1 = this computer only (default, safest)',
+    '#   0.0.0.0   = also other devices on your network (then allow the ports in your firewall).',
+    '#               The model API and MCP servers have no login, so only do this on a network you trust.',
+    'BIND_ADDR=127.0.0.1',
     '',
     `# Host ports (change any that clash with something already running)`,
     `# ${body.short} web UI`,
@@ -114,6 +116,21 @@ export function buildSupportFiles(stack, botName) {
     `# ${feet.short}`,
     `MCP_PORT=${feet.port}`,
     '',
+    ...(share ? [
+      '# ---- Network model share (models load from here, not the internet) ----',
+      '# SMB/Windows share (default):  MODELS_SHARE=//nas-or-pc-name/models',
+      '#   guest access:              SHARE_OPTIONS=ro,vers=3.0,guest',
+      '#   with a login:              SHARE_OPTIONS=ro,vers=3.0,username=YOURUSER,password=YOURPASS',
+      '# NFS share:                    SHARE_TYPE=nfs  MODELS_SHARE=:/export/models  SHARE_OPTIONS=addr=192.168.1.50,ro,nfsvers=4',
+      '# Folder already on this host:  SHARE_TYPE=none MODELS_SHARE=/path/to/models  SHARE_OPTIONS=bind',
+      'SHARE_TYPE=cifs',
+      'MODELS_SHARE=//CHANGE-ME/models',
+      'SHARE_OPTIONS=ro,vers=3.0,guest',
+      llm.engine === 'ollama' ? '# Folder on the share holding the Ollama models dir (blobs/ + manifests/)\nOLLAMA_SHARE_DIR=ollama' : '',
+      llm.engine === 'llamacpp' ? `# .gguf file on the share, relative to the share root\nMODEL_FILE=gguf/${heart.id}.gguf` : '',
+      llm.engine === 'vllm' ? `# Hugging Face model folder on the share, relative to the share root\nMODEL_DIR=hf/${llm.modelVar.split('/').pop()}` : '',
+      ''
+    ] : []),
     '# Model',
     llm.engine === 'cloud' ? `CLOUD_MODEL=${llm.modelVar}` : `MODEL_NAME=${llm.modelVar}`,
     'MAX_CONTEXT=16384',
@@ -212,7 +229,24 @@ pause
 ${gpu.id === 'nvidia' ? '   - NVIDIA: current NVIDIA driver. Windows needs Docker Desktop with the **WSL2** backend. Linux needs the **NVIDIA Container Toolkit**.\n' : ''}${gpu.id === 'amd' ? '   - AMD: Linux host with ROCm drivers (`/dev/kfd` and `/dev/dri` must exist). Docker Desktop on Windows/macOS cannot pass AMD GPUs through.\n' : ''}${llm.engine === 'cloud' ? `   - Put your \`${llm.keyVar}\` in \`.env\`.\n` : ''}2. Run \`start.bat\` (Windows) or \`./start.sh\` (Linux/macOS).
 3. Open **http://localhost:3000** (or the \`UI_PORT\` in \`.env\`).
 ${llm.engine !== 'cloud' ? '\nThe first start downloads the model (several GB). The UI may show no models until that finishes.\n' : ''}
-## 🔌 Connecting your MCP tools
+${share ? `## 🗄️ Models from your network share
+
+No model weights are downloaded from the internet. Set \`MODELS_SHARE\` (and login options if needed) in \`.env\`. Expected layout on the share:
+
+\`\`\`
+models/
+  ollama/   <- copy of an Ollama models folder (contains blobs/ and manifests/)
+  gguf/     <- .gguf files (for llama.cpp)
+  hf/       <- Hugging Face model folders (for vLLM)
+\`\`\`
+
+${llm.engine === 'ollama' ? `- **Ollama:** \`MODEL_NAME\` (\`${llm.modelVar}\`) must exist in \`ollama/\`. On first start, \`ollama-seed\` copies just that model into this bot's storage. The share is never written to. To fill the share, copy \`%USERPROFILE%\\.ollama\\models\` (Windows) or \`~/.ollama/models\` from a machine that already pulled the model.` : ''}${llm.engine === 'llamacpp' ? `- **llama.cpp:** set \`MODEL_FILE\` to the .gguf path on the share. Any GGUF works, including one downloaded from Hugging Face.` : ''}${llm.engine === 'vllm' ? `- **vLLM:** set \`MODEL_DIR\` to a full Hugging Face model folder (config.json, tokenizer files and *.safetensors), e.g. from \`hf download ${llm.modelVar} --local-dir hf/${llm.modelVar.split('/').pop()}\`. vLLM runs in offline mode. It can't use Ollama or GGUF files.` : ''}
+
+Check the share mounted: \`docker compose logs ${llm.engine === 'ollama' ? 'ollama-seed' : llm.service}\`. After changing share settings, run \`docker compose down\` then \`docker volume rm <project>_shared_models\` so Docker re-reads them.
+
+Container images (Ollama, Open WebUI, …) still come from their registries the first time. Only model weights come from the share.
+
+` : ''}## 🔌 Connecting your MCP tools
 
 Containers reach each other by **service name**, not \`localhost\` (inside a container, \`localhost\` is that container itself).
 
@@ -227,7 +261,7 @@ Model endpoint (OpenAI-compatible, for any UI or tool): \`${llm.baseUrl}\` · mo
 ## 🧰 Troubleshooting
 
 - **GPU not used** – run \`docker exec ${llm.container || '<engine container>'} nvidia-smi\`. If it fails: update the NVIDIA driver; on Windows enable WSL2 in Docker Desktop; on Linux install the NVIDIA Container Toolkit and run \`sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker\`. ${llm.engine === 'ollama' ? '`docker compose logs ollama | grep -i gpu` shows what Ollama detected; `docker exec buildabot-ollama ollama ps` shows GPU vs CPU split.' : ''}
-- **Can't open a port** – another app may be using it: change it in \`.env\`. From another machine, allow the port in your firewall (Windows Defender Firewall → Inbound rules).
+- **Can't open a port** – another app may be using it: change it in \`.env\`. By default only this computer can connect. To allow other devices on your network, set \`BIND_ADDR=0.0.0.0\` in \`.env\`, run \`docker compose up -d\`, and allow the port in your firewall.
 - **No internet inside containers** – \`docker compose logs egress-check\`. FAIL lines usually mean a VPN, corporate proxy, or DNS issue. In Docker Desktop, check **Settings → Resources → Proxies**.
 - **Model too big** – pick a smaller Heart or set \`MAX_CONTEXT=8192\` in \`.env\`.
 `;

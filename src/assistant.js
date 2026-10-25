@@ -37,18 +37,18 @@ export class GlitchAssistant {
     }
 
     if (config.feetId === 'browser-use' && config.heartId === 'qwen3') {
-      return `Purr-fect combo! Qwen3's reasoning paired with Browser-Use will tear through web challenges. It'll find hidden DOM flags before breakfast!`;
+      return `Purr-fect combo! Qwen3's reasoning plus a real browser through Playwright MCP. Your bot can click around websites for you!`;
     }
 
     if (config.feetId === 'mcp-deck') {
-      return `Aha, Model Context Protocol cyber-deck equipped! Your bot will speak native MCP JSON-RPC to the included Quantum Vault server on port 9090. L33t choice!`;
+      return `Web Tools MCP equipped! Your bot can fetch web pages and read headers through real MCP. Add its URL from the README to your UI.`;
     }
 
     if (config.bodyId === 'n8n') {
       return `n8n pincer engaged! Add an MCP Client Tool node for each server in your README and let the workflows fly.`;
     }
 
-    return `Config looks crisp! Current hardware footprint: ~${heart?.vram?.[head?.engine] ?? 4} GB. Let me know if you need CTF tactics or Docker tuning!`;
+    return `Config looks crisp! Current hardware footprint: ~${heart?.vram?.[head?.engine] ?? 4} GB. Let me know if you need help with Docker, GPUs or MCP!`;
   }
 
   async sendMessage(userMessage, currentConfig, partsCatalog) {
@@ -97,20 +97,17 @@ export class GlitchAssistant {
     const lower = message.toLowerCase();
 
     if (lower.includes('docker') || lower.includes('build') || lower.includes('run')) {
-      return `To launch your assembled bot, just unzip your downloaded package and run:\n\`\`\`bash\ndocker compose up -d\n\`\`\`\nThis builds your local CTF web target (port 8088), the challenge MCP server (port 9090), and starts your AI orchestrator! You can inspect logs anytime with \`docker compose logs -f\`.`;
+      return `To launch your assembled bot, just unzip your downloaded package and run:\n\`\`\`bash\ndocker compose up -d\n\`\`\`\nThe start script also checks your GPU and internet access. Watch progress with \`docker compose logs -f\`.`;
     }
 
     if (lower.includes('mcp') || lower.includes('protocol') || lower.includes('tool')) {
-      return `The Model Context Protocol (MCP) lets your bot execute standardized tools outside its sandbox! In your bundle, Challenge 2 is a preconfigured MCP server on port 9090. Your agent can call \`inspect_firmware()\` and \`decrypt_firmware()\` to extract \`FLAG{WH1T3_H4T_B0T_4SS3MBL3D}\`.`;
+      return `The Model Context Protocol (MCP) lets your bot execute standardized tools outside its sandbox! Your bundle's README lists the exact MCP URL to paste into your UI. Inside Docker, use the service name (like http://web-tools-mcp:8811/mcp), not localhost.`;
     }
 
     if (lower.includes('vram') || lower.includes('ram') || lower.includes('gpu') || lower.includes('hardware')) {
-      return `Hardware check: For your current build, you'll need around 4-8 GB of RAM/VRAM. If you don't have an Nvidia GPU, don't sweat it! The Docker compose file automatically falls back to CPU quantization mode smoothly.`;
+      return `Hardware check: For your current build, you'll need around 4-8 GB of RAM/VRAM. No NVIDIA GPU? Pick CPU only in the Power slot (slower), or the Cloud Uplink head. After starting, run \`docker exec buildabot-ollama nvidia-smi\` to confirm the GPU is visible.`;
     }
 
-    if (lower.includes('ctf') || lower.includes('flag') || lower.includes('challenge') || lower.includes('hack')) {
-      return `Two White-Hat challenges are baked into your bundle:\n1. **The Hidden Beacon (Port 8088)**: Have your agent inspect HTML source comments and HTTP headers for the hidden vault key!\n2. **The Quantum Vault MCP (Port 9090)**: Query the MCP server with the cipher mode 'quantum_bypass' to crack the firmware!`;
-    }
 
     if (lower.includes('name') || lower.includes('rename')) {
       return `Hit that 🎲 "Re-Roll Identity" button up top! My algorithm has generated over 1,000 top-tier hacker aliases like *Sir Pwns-A-Lot 3000* and *BufferOverFluff*.`;

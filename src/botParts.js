@@ -253,7 +253,6 @@ export const BODY_PARTS = [
 
 // ---------------------------------------------------------------------------
 // FEET // MCP TOOLING  (every option is a real MCP server on Streamable HTTP)
-// The CTF "Quantum Vault" MCP server is always included in addition to this.
 // ---------------------------------------------------------------------------
 export const FEET_PARTS = [
   {
@@ -351,6 +350,33 @@ export const GPU_PARTS = [
 ];
 
 // ---------------------------------------------------------------------------
+// MODEL SOURCE // where model weights come from
+// ---------------------------------------------------------------------------
+export const SOURCE_PARTS = [
+  {
+    id: 'internet',
+    name: 'Internet Download',
+    short: 'Internet',
+    badge: 'Ollama registry / Hugging Face',
+    icon: '🌍',
+    funnyLore: 'Downloads the model on first start. Simple, but needs a few GB of internet bandwidth.',
+    cuteness: 90,
+    ctfProwess: 90
+  },
+  {
+    id: 'share',
+    name: 'Network Share (SMB / NFS / folder)',
+    short: 'Network share',
+    badge: 'No model downloads from the internet',
+    icon: '🗄️',
+    funnyLore: 'Loads models from a shared folder on your network. Set the share path in .env.',
+    technicalRole: 'Ollama: ollama/ folder (blobs + manifests). llama.cpp: a .gguf file. vLLM: a Hugging Face model folder.',
+    cuteness: 92,
+    ctfProwess: 92
+  }
+];
+
+// ---------------------------------------------------------------------------
 // Compatibility helpers
 // ---------------------------------------------------------------------------
 export function findPart(list, id) {
@@ -380,6 +406,8 @@ export function normalizeConfig(config) {
     heart = HEART_PARTS.find(h => isHeartCompatible(head, h));
   }
   cfg.heartId = heart.id;
+  if (!SOURCE_PARTS.some(s => s.id === cfg.sourceId)) cfg.sourceId = 'internet';
+  if (head.engine === 'cloud') cfg.sourceId = 'internet';
   cfg.bodyId = findPart(BODY_PARTS, cfg.bodyId).id;
   cfg.feetId = findPart(FEET_PARTS, cfg.feetId).id;
   return cfg;

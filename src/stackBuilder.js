@@ -1,11 +1,11 @@
 // Builds the core Docker stack (engine, model, UI, MCP tools, GPU, ports, network).
 // Output is plain YAML text. Compose-level variables (${VAR:-default}) are kept
 // literal so users can change ports/models in .env without re-downloading.
-import { HEAD_PARTS, BODY_PARTS, HEART_PARTS, FEET_PARTS, GPU_PARTS, findPart, normalizeConfig } from './botParts.js';
+import { HEAD_PARTS, BODY_PARTS, HEART_PARTS, FEET_PARTS, GPU_PARTS, SOURCE_PARTS, findPart, normalizeConfig } from './botParts.js';
 
 const NET = ['    networks:', '      - buildabot-net'];
 const RESTART = '    restart: unless-stopped';
-const port = (envVar, def, inner) => `      - "\${BIND_ADDR:-0.0.0.0}:\${${envVar}:-${def}}:${inner}"`;
+const port = (envVar, def, inner) => `      - "\${BIND_ADDR:-127.0.0.1}:\${${envVar}:-${def}}:${inner}"`;
 
 function gpuLines(gpuId) {
   if (gpuId === 'nvidia') {
@@ -54,8 +54,67 @@ export function resolveLlm(cfg) {
   }
 }
 
+function ollamaPull(image, llm) {
+  return [
+      '  # One-shot helper: downloads the model into the shared volume, then exits.',
+      '  ollama-pull:',
+      `    image: ${image}`,
+      '    container_name: buildabot-ollama-pull',
+      '    restart: "no"',
+      '    entrypoint: ["/bin/sh", "-c"]',
+      '    command: ["ollama pull ${MODEL_NAME:-' + llm.modelVar + '}"]',
+      '    environment:',
+      '      - OLLAMA_HOST=http://ollama:11434',
+      '    depends_on:',
+      '      ollama:',
+      '        condition: service_healthy',
+      ...NET
+  ];
+}
+
+// Copies ONLY the chosen model (manifest + its blobs) from the read-only share into
+// this bot's own Ollama volume. Never writes to the share; skips files already copied.
+function ollamaSeed() {
+  return [
+    '  # One-shot helper: copies the model from the network share (no internet), then exits.',
+    '  ollama-seed:',
+    '    image: python:3.12-alpine',
+    '    container_name: buildabot-ollama-seed',
+    '    restart: "no"',
+    '    environment:',
+    '      - MODEL_NAME=${MODEL_NAME}',
+    '      - SRC=/share/${OLLAMA_SHARE_DIR:-ollama}',
+    '    volumes:',
+    '      - shared_models:/share:ro',
+    '      - ollama_models:/dest',
+    '    command:',
+    '      - python',
+    '      - -c',
+    '      - |',
+    '        import json, os, shutil, sys',
+    '        name = os.environ["MODEL_NAME"]; src = os.environ["SRC"]; dst = "/dest/models"',
+    '        model, _, tag = name.partition(":"); tag = tag or "latest"',
+    '        if "/" not in model: model = "library/" + model',
+    '        rel = f"manifests/registry.ollama.ai/{model}/{tag}"',
+    '        if not os.path.exists(f"{src}/{rel}"):',
+    '            sys.exit(f"Model {name} not found on the share (looked for {src}/{rel})")',
+    '        m = json.load(open(f"{src}/{rel}"))',
+    '        os.makedirs(f"{dst}/blobs", exist_ok=True)',
+    '        for d in [m["config"]["digest"]] + [l["digest"] for l in m["layers"]]:',
+    '            b = d.replace(":", "-"); t = f"{dst}/blobs/{b}"',
+    '            if not os.path.exists(t):',
+    '                print("copying", b, flush=True)',
+    '                shutil.copyfile(f"{src}/blobs/{b}", t + ".part"); os.replace(t + ".part", t)',
+    '        os.makedirs(os.path.dirname(f"{dst}/{rel}"), exist_ok=True)',
+    '        shutil.copyfile(f"{src}/{rel}", f"{dst}/{rel}")',
+    '        print("Model ready:", name)',
+    ...NET
+  ];
+}
+
 function headService(cfg, llm, heart) {
   const g = cfg.gpuId;
+  const share = cfg.sourceId === 'share';
   if (llm.engine === 'ollama') {
     const image = g === 'amd' ? 'ollama/ollama:rocm' : 'ollama/ollama:latest';
     return [
@@ -77,21 +136,10 @@ function headService(cfg, llm, heart) {
       '      timeout: 5s',
       '      retries: 30',
       ...gpuLines(g),
+      ...(share ? ['    depends_on:', '      ollama-seed:', '        condition: service_completed_successfully'] : []),
       ...NET,
       '',
-      '  # One-shot helper: downloads the model into the shared volume, then exits.',
-      '  ollama-pull:',
-      `    image: ${image}`,
-      '    container_name: buildabot-ollama-pull',
-      '    restart: "no"',
-      '    entrypoint: ["/bin/sh", "-c"]',
-      '    command: ["ollama pull ${MODEL_NAME:-' + llm.modelVar + '}"]',
-      '    environment:',
-      '      - OLLAMA_HOST=http://ollama:11434',
-      '    depends_on:',
-      '      ollama:',
-      '        condition: service_healthy',
-      ...NET
+      ...(share ? ollamaSeed() : ollamaPull(image, llm))
     ];
   }
   if (llm.engine === 'vllm') {
@@ -106,11 +154,13 @@ function headService(cfg, llm, heart) {
       '    environment:',
       '      - HF_TOKEN=${HF_TOKEN:-}',
       ...nvidiaEnv(g),
+      ...(share ? ['      - HF_HUB_OFFLINE=1', '      - TRANSFORMERS_OFFLINE=1'] : []),
       '    volumes:',
       '      - hf_cache:/root/.cache/huggingface',
+      ...(share ? ['      - shared_models:/share:ro'] : []),
       '    command:',
       '      - "--model"',
-      '      - "${MODEL_NAME:-' + llm.modelVar + '}"',
+      share ? '      - "/share/${MODEL_DIR:-hf/' + llm.modelVar.split('/').pop() + '}"' : '      - "${MODEL_NAME:-' + llm.modelVar + '}"',
       '      - "--served-model-name"',
       `      - "${heart.id}"`,
       '      - "--enable-auto-tool-choice"',
@@ -142,9 +192,11 @@ function headService(cfg, llm, heart) {
       ...nvidiaEnv(g),
       '    volumes:',
       '      - llamacpp_models:/models',
+      ...(share ? ['      - shared_models:/share:ro'] : []),
       '    command:',
-      '      - "-hf"',
-      '      - "${MODEL_NAME:-' + llm.modelVar + '}"',
+      ...(share
+        ? ['      - "-m"', '      - "/share/${MODEL_FILE:-gguf/' + heart.id + '.gguf}"']
+        : ['      - "-hf"', '      - "${MODEL_NAME:-' + llm.modelVar + '}"']),
       '      - "--alias"',
       `      - "${heart.id}"`,
       '      - "--jinja"',
@@ -353,11 +405,12 @@ export function buildStack(rawCfg) {
   const body = findPart(BODY_PARTS, cfg.bodyId);
   const feet = findPart(FEET_PARTS, cfg.feetId);
   const gpu = findPart(GPU_PARTS, cfg.gpuId);
+  const source = findPart(SOURCE_PARTS, cfg.sourceId);
   const llm = resolveLlm(cfg);
 
   const services = [
     '  # ----------------------------------------------------------------------------',
-    `  # 🧠 HEAD (inference engine): ${head.short}  •  ❤️ HEART (model): ${heart.short}  •  🔋 ${gpu.short}`,
+    `  # 🧠 HEAD (inference engine): ${head.short}  •  ❤️ HEART (model): ${heart.short}  •  🔋 ${gpu.short}  •  📦 ${source.short}`,
     '  # ----------------------------------------------------------------------------',
     ...headService(cfg, llm, heart),
     '',
@@ -375,8 +428,21 @@ export function buildStack(rawCfg) {
   ].join('\n') + '\n';
 
   const volumes = ['ollama_models', 'hf_cache', 'llamacpp_models', 'open_webui_data', 'anythingllm_storage', 'flowise_data', 'n8n_data', 'qdrant_storage', 'uv_cache'];
-  const volumesYaml = 'volumes:\n' + volumes.map(v => `  ${v}:`).join('\n') + '\n';
+  let volumesYaml = 'volumes:\n' + volumes.map(v => `  ${v}:`).join('\n') + '\n';
+  if (cfg.sourceId === 'share') {
+    volumesYaml += [
+      '  # Network model share (read-only). Settings live in .env.',
+      '  # NOTE: Docker remembers these options. After changing them run:  docker compose down && docker volume rm ' + '<project>_shared_models',
+      '  shared_models:',
+      '    driver: local',
+      '    driver_opts:',
+      '      type: "${SHARE_TYPE:-cifs}"',
+      '      device: "${MODELS_SHARE:?Set MODELS_SHARE in .env}"',
+      '      o: "${SHARE_OPTIONS:-ro,vers=3.0,guest}"',
+      ''
+    ].join('\n');
+  }
   const networksYaml = 'networks:\n  buildabot-net:\n    driver: bridge\n';
 
-  return { cfg, head, heart, body, feet, gpu, llm, services, volumesYaml, networksYaml };
+  return { cfg, head, heart, body, feet, gpu, source, llm, services, volumesYaml, networksYaml };
 }

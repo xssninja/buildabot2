@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Build-A-Bot: The cyber-cute AI deployment fabricator. Assemble custom Docker stacks with Ollama, OpenClaw, MCP tooling, and White-Hat CTF challenges." />
+    <meta name="description" content="Build-A-Bot: The cyber-cute AI deployment fabricator. Assemble custom Docker stacks with Ollama, Open WebUI, MCP tooling, and GPU support." />
     <meta name="theme-color" content="#0d1117" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
     <title>Build-A-Bot // Cybernetic AI Deployment Fabricator</title>
@@ -53,7 +53,7 @@
         <section class="slots-column" aria-label="Bot Modular Slots">
           <div class="column-header">
             <h2 class="section-title">MODULAR SLOTS</h2>
-            <span class="badge-counter" id="slots-count">5/5 ASSEMBLED</span>
+            <span class="badge-counter" id="slots-count">6/6 ASSEMBLED</span>
           </div>
 
           <div class="slots-accordion" id="slots-container">
@@ -73,7 +73,7 @@
             <div class="bot-tags-row" id="bot-tags-row">
               <span class="tag-pill tag-cyan">ETHICAL WHITE-HAT</span>
               <span class="tag-pill tag-pink">MCP ENABLED</span>
-              <span class="tag-pill tag-green">CTF READY</span>
+              <span class="tag-pill tag-green">GPU READY</span>
             </div>
           </div>
 
@@ -94,11 +94,11 @@
               </div>
               <div class="deck-spec">
                 <span class="spec-label">TARGET PORTS:</span>
-                <span class="spec-val" id="spec-ports">:3000, :8088, :9090</span>
+                <span class="spec-val" id="spec-ports">:3000, :11434, :8811</span>
               </div>
               <div class="deck-spec">
-                <span class="spec-label">CHALLENGES:</span>
-                <span class="spec-val neon-green">2 ACTIVE</span>
+                <span class="spec-label">MCP TOOLS:</span>
+                <span class="spec-val neon-green">1 ACTIVE</span>
               </div>
             </div>
 
@@ -138,7 +138,7 @@
 
               <div class="metric-item">
                 <div class="metric-header">
-                  <span>CTF PROWESS</span>
+                  <span>AGENT PROWESS</span>
                   <span class="metric-val neon-cyan" id="stat-ctf">94% [L33T]</span>
                 </div>
                 <div class="progress-bar-track">
@@ -172,21 +172,21 @@
             </div>
 
             <div class="mentor-bubble" id="mentor-commentary">
-              "Assembling your companion! Pair DeepSeek reasoning with an MCP Cyber-deck for maximum CTF dominance."
+              "Assembling your companion! Pair a tool-calling model with an MCP server and your bot can actually do things."
             </div>
 
             <!-- Chat History Area -->
             <div class="mentor-chat-history" id="mentor-chat-stream">
               <div class="chat-msg msg-bot">
                 <span class="msg-sender">GL1TCH-E:</span>
-                <span class="msg-text">Welcome to the assembly floor! Ask me about your Docker config, VRAM limits, or the included White-Hat challenges.</span>
+                <span class="msg-text">Welcome to the assembly floor! Ask me about your Docker config, VRAM limits, or connecting MCP tools.</span>
               </div>
             </div>
 
             <!-- Quick Suggestion Chips -->
             <div class="quick-chips-row">
               <button class="chip-query" data-q="How do I connect my bot to MCP?">MCP Setup?</button>
-              <button class="chip-query" data-q="Explain the White-Hat CTF challenges">CTF Goals?</button>
+              <button class="chip-query" data-q="How do I check my GPU is being used?">GPU check?</button>
               <button class="chip-query" data-q="Will this run on my 8GB laptop?">8GB RAM?</button>
             </div>
 
@@ -231,8 +231,7 @@
               <button class="bp-tab active" data-file="docker-compose.yml">docker-compose.yml</button>
               <button class="bp-tab" data-file="README.md">README.md</button>
               <button class="bp-tab" data-file=".env.example">.env.example</button>
-              <button class="bp-tab" data-file="ctf-sandbox/mcp-server/mcp_server.py">mcp_server.py</button>
-              <button class="bp-tab" data-file="ctf-sandbox/web-target/index.html">ctf_target.html</button>
+              <button class="bp-tab" data-file="start.bat">start.bat</button>
             </div>
             <pre class="blueprint-code-view"><code id="blueprint-code-content"></code></pre>
           </div>

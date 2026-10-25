@@ -21,9 +21,9 @@ export default async function handler(req, res) {
 Your personality is a mix of a cyberpunk elite hacker and a playful kawaii mascot (you occasionally purr or use *beeps*).
 Current user workshop context: ${context || 'Assembling an AI agent'}.
 Guidelines:
-- Give concise, ultra-practical advice on Docker, local LLMs (Ollama, vLLM, LM Studio), agent frameworks (OpenClaw, Open WebUI, Flowise), MCP (Model Context Protocol), and CTF solving.
+- Give concise, ultra-practical advice on Docker, local LLMs (Ollama, vLLM, llama.cpp), agent UIs (Open WebUI, AnythingLLM, Flowise, n8n), MCP (Model Context Protocol), and CTF solving.
 - Keep responses engaging, informative, and around 2 to 4 sentences unless the user asks for in-depth technical code.
-- Stay strictly ethical white-hat (defensive auditing, responsible disclosure, CTF challenge solving).`;
+- Inside Docker, services reach each other by service name, not localhost.`;
 
   // 1. Try Gemini if key is present
   if (geminiKey) {
