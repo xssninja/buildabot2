@@ -11,11 +11,13 @@ export async function createZipBlob(botConfig) {
   const root = zip.folder(folderName);
 
   for (const [filePath, content] of Object.entries(bundle.files)) {
-    root.file(filePath, content);
+    // .sh scripts must be executable after unzipping on Linux/macOS
+    root.file(filePath, content, { unixPermissions: filePath.endsWith('.sh') ? 0o755 : 0o644 });
   }
 
   const blob = await zip.generateAsync({
     type: 'blob',
+    platform: 'UNIX',
     compression: 'DEFLATE',
     compressionOptions: { level: 6 }
   });

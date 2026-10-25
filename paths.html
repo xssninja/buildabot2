@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0b0f19" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<title>Build-A-Bot // DIY + Subscriptions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="wrap" style="gap:40px">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00f5d4" stroke-width="2" aria-hidden="true"><rect x="5" y="8" width="14" height="11" rx="2"/><path d="M12 8V4M9 13h.01M15 13h.01M9 17h6"/></svg></div>
+      <div><div class="brand-title">BUILD-A-BOT</div><div class="brand-sub">DIY GUIDE // SUBSCRIPTIONS</div></div>
+    </div>
+    <nav class="nav" aria-label="Pages">
+      <a href="/">1 · Paths</a>
+      <a href="/builder.html">Workshop</a>
+      <span class="on">2 · DIY + Subs</span>
+    </nav>
+  </header>
+
+  <section id="diy" aria-label="DIY Build" style="display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span class="eyebrow" style="color:var(--amber)">DIY BUILD // STEP 1: PICK A STARTING POINT</span>
+      <h1 style="font-size:clamp(28px,4vw,44px)">Start simple, then drill down</h1>
+    </div>
+    <div id="diy-choices" class="choices"></div>
+    <div id="diy-steps" class="steps" aria-live="polite"></div>
+  </section>
+
+  <section id="subs" aria-label="Subscriptions" style="display:flex;flex-direction:column;gap:20px">
+    <div class="section-head">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span class="eyebrow" style="color:var(--violet)">SUBSCRIPTIONS // NO GPU REQUIRED</span>
+        <h2 style="font-size:clamp(26px,3.5vw,40px)">Online models and agents</h2>
+      </div>
+      <div id="sub-chips" class="chips" role="group" aria-label="Filter plans"></div>
+    </div>
+    <div id="sub-list" class="subs"></div>
+    <p class="fine"><span class="star">★ MCP connections not confirmed for this one, so check before relying on it.</span> Prices as of October 2026, monthly, USD. They change often, so check each pricing page.</p>
+  </section>
+</div>
+<script type="module" src="/src/paths.js"></script>
+</body>
+</html>

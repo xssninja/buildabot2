@@ -165,13 +165,17 @@ echo "  LAUNCHING: ${botName}"
 echo "========================================================"
 docker info >/dev/null 2>&1 || { echo "Docker is not running."; exit 1; }${gpuCheckSh}
 mkdir -p workspace
-docker compose up -d --build${gpuVerifySh}
+docker compose up -d --build || { bash ./doctor.sh failed; exit 1; }${gpuVerifySh}
 echo ""
 echo "[NET] Internet check from inside the Docker network:"
 sleep 8; docker compose logs --no-log-prefix egress-check || true
 echo ""
 echo "UI:        http://localhost:\${UI_PORT:-3000}"
 ${llm.engine === 'ollama' ? 'echo "Model download progress:  docker compose logs -f ollama-pull"' : llm.service ? `echo "Model loading progress:   docker compose logs -f ${llm.service}"` : ''}
+echo ""
+echo "[DOCTOR] Waiting 20s, then checking every service..."
+sleep 20
+bash ./doctor.sh
 `;
 
   files['start.bat'] = `@echo off
@@ -182,7 +186,7 @@ echo ========================================================
 docker info >nul 2>&1 || (echo Docker Desktop is not running. & pause & exit /b 1)
 ${gpu.id === 'nvidia' && llm.service ? `where nvidia-smi >nul 2>&1 && (echo [GPU] Host GPU: & nvidia-smi --query-gpu=name,memory.total --format=csv,noheader) || echo [GPU] WARNING: nvidia-smi not found - install the NVIDIA driver, or rebuild with CPU only.` : ''}
 if not exist workspace mkdir workspace
-docker compose up -d --build
+docker compose up -d --build || (call doctor.bat failed & pause & exit /b 1)
 ${gpu.id === 'nvidia' && llm.service ? `echo [GPU] Checking the GPU is visible inside ${llm.container}...
 timeout /t 5 >nul
 docker exec ${llm.container} nvidia-smi -L || echo [GPU] Not visible in the container. See README - Troubleshooting - GPU.` : ''}
@@ -193,7 +197,75 @@ docker compose logs --no-log-prefix egress-check
 echo.
 echo UI: http://localhost:3000  (or the UI_PORT set in .env)
 ${llm.engine === 'ollama' ? 'echo Model download progress:  docker compose logs -f ollama-pull' : llm.service ? `echo Model loading progress:   docker compose logs -f ${llm.service}` : ''}
+echo.
+echo [DOCTOR] Waiting 20s, then checking every service...
+timeout /t 20 >nul
+call doctor.bat
 pause
+`;
+
+
+  // ---------- doctor: find failing services, show logs, offer Docker AI ----------
+  const aiPrompt = 'A service in my Docker Compose stack in this folder is failing. Read docker-compose.yml and .env, check the logs of the failing containers, explain the error in plain language and tell me exactly how to fix it.';
+  files['doctor.sh'] = `#!/usr/bin/env bash
+# Checks every service. Run any time:  ./doctor.sh
+cd "$(dirname "$0")"
+bad=$(docker compose ps -a --format '{{.Service}} {{.State}} {{.ExitCode}}' 2>/dev/null | awk '$2=="restarting" || ($2=="exited" && $3!="0") {print $1}')
+if [ -z "$bad" ] && [ "$1" != "failed" ]; then echo "[DOCTOR] All services look healthy."; exit 0; fi
+echo "========================================================"
+echo "  [DOCTOR] Something went wrong"
+echo "========================================================"
+[ "$1" = "failed" ] && echo "docker compose could not start the stack (see the error above)."
+for s in $bad; do echo ""; echo "---- $s (last 30 log lines) ----"; docker compose logs --tail 30 "$s"; done
+echo ""
+if docker ai version >/dev/null 2>&1; then
+  echo "Docker's AI assistant can diagnose this for you:"
+  echo "  docker ai \\"${aiPrompt}\\""
+  read -r -p "Ask it now? [y/N] " a
+  [ "$a" = "y" ] || [ "$a" = "Y" ] && docker ai "${aiPrompt}"
+else
+  echo "Tip: Docker Desktop includes an AI assistant (Gordon). Turn it on in"
+  echo "Docker Desktop > Settings > AI, then run this in this folder:"
+  echo "  docker ai \\"${aiPrompt}\\""
+  echo "Or paste the logs above into the GL1TCH-E chat on the Build-A-Bot site."
+fi
+`;
+
+  files['doctor.bat'] = `@echo off
+rem Checks every service. Run any time: double-click doctor.bat
+setlocal enabledelayedexpansion
+cd /d "%~dp0"
+set BAD=
+for /f "tokens=1-3" %%a in ('docker compose ps -a --format "{{.Service}} {{.State}} {{.ExitCode}}" 2^>nul') do (
+  if /i "%%b"=="restarting" set BAD=!BAD! %%a
+  if /i "%%b"=="exited" if not "%%c"=="0" set BAD=!BAD! %%a
+)
+if not defined BAD if not "%1"=="failed" (
+  echo [DOCTOR] All services look healthy.
+  exit /b 0
+)
+echo ========================================================
+echo   [DOCTOR] Something went wrong
+echo ========================================================
+if "%1"=="failed" echo docker compose could not start the stack - see the error above.
+for %%s in (!BAD!) do (
+  echo.
+  echo ---- %%s - last 30 log lines ----
+  docker compose logs --tail 30 %%s
+)
+echo.
+docker ai version >nul 2>&1
+if !errorlevel! equ 0 (
+  echo Docker's AI assistant can diagnose this for you:
+  echo   docker ai "${aiPrompt}"
+  choice /m "Ask it now"
+  if !errorlevel! equ 1 docker ai "${aiPrompt}"
+) else (
+  echo Tip: Docker Desktop includes an AI assistant - Gordon. Turn it on in
+  echo Docker Desktop - Settings - AI, then run this in this folder:
+  echo   docker ai "${aiPrompt}"
+  echo Or paste the logs above into the GL1TCH-E chat on the Build-A-Bot site.
+)
 `;
 
   // ---------- README stack section ----------
@@ -259,6 +331,15 @@ ${uiSteps}
 Model endpoint (OpenAI-compatible, for any UI or tool): \`${llm.baseUrl}\` · model \`${llm.model}\`
 
 ## 🧰 Troubleshooting
+
+**First stop for any error:** run \`doctor.bat\` (Windows) or \`./doctor.sh\`. It finds the failing service, shows its logs, and offers to ask Docker's AI assistant:
+
+\`\`\`
+docker ai "${aiPrompt}"
+\`\`\`
+
+(Turn Gordon on in Docker Desktop → Settings → AI. Run the command inside this folder so it can see your files.)
+
 
 - **GPU not used** – run \`docker exec ${llm.container || '<engine container>'} nvidia-smi\`. If it fails: update the NVIDIA driver; on Windows enable WSL2 in Docker Desktop; on Linux install the NVIDIA Container Toolkit and run \`sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker\`. ${llm.engine === 'ollama' ? '`docker compose logs ollama | grep -i gpu` shows what Ollama detected; `docker exec buildabot-ollama ollama ps` shows GPU vs CPU split.' : ''}
 - **Can't open a port** – another app may be using it: change it in \`.env\`. By default only this computer can connect. To allow other devices on your network, set \`BIND_ADDR=0.0.0.0\` in \`.env\`, run \`docker compose up -d\`, and allow the port in your firewall.
