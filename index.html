@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Build-A-Bot: The cyber-cute AI deployment fabricator. Assemble custom Docker stacks with Ollama, OpenClaw, MCP tooling, and White-Hat CTF challenges." />
+    <meta name="theme-color" content="#0d1117" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+    <title>Build-A-Bot // Cybernetic AI Deployment Fabricator</title>
+    <!-- Modern Typography: JetBrains Mono and Space Grotesk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- CRT Ambient Scanline Overlay -->
+    <div class="crt-scanlines" aria-hidden="true"></div>
+
+    <div id="app" class="app-layout">
+      <!-- HEADER / WORKSHOP NAV -->
+      <header class="workshop-header">
+        <div class="brand-zone">
+          <div class="brand-icon" id="btn-sound-purr" title="Click to hear your bot purr!">🤖</div>
+          <div class="brand-text">
+            <h1 class="brand-title">BUILD-A-BOT</h1>
+            <span class="brand-subtitle">CYBERNETIC FABRICATOR // WHITE-HAT SUITE</span>
+          </div>
+        </div>
+
+        <div class="header-status-badge">
+          <span class="status-pulse"></span>
+          <span>FABRICATION BAY: <strong class="neon-cyan">ONLINE</strong></span>
+        </div>
+
+        <div class="header-actions">
+          <button id="btn-reroll-name" class="btn-chip" title="Re-roll funny hacker name">
+            <span>🎲 Re-roll Name</span>
+          </button>
+          <button id="btn-toggle-sound" class="btn-chip" title="Toggle 8-bit sound effects">
+            <span id="sound-icon">🔊 Sound ON</span>
+          </button>
+          <button id="btn-open-settings" class="btn-chip" title="API Keys & Settings">
+            <span>⚙️ Settings</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- MAIN FABRICATOR WORKSPACE -->
+      <main class="workshop-grid">
+        
+        <!-- LEFT COLUMN: PARTS SELECTION SLOTS -->
+        <section class="slots-column" aria-label="Bot Modular Slots">
+          <div class="column-header">
+            <h2 class="section-title">MODULAR SLOTS</h2>
+            <span class="badge-counter" id="slots-count">5/5 ASSEMBLED</span>
+          </div>
+
+          <div class="slots-accordion" id="slots-container">
+            <!-- Slot tabs will be injected by main.js: Head, Body, Heart, Feet, Accessories -->
+          </div>
+        </section>
+
+        <!-- CENTER COLUMN: PEDESTAL & VISUAL CHASSIS -->
+        <section class="pedestal-column" aria-label="Assembly Stage">
+          <!-- Active Bot Name Card -->
+          <div class="bot-identity-card">
+            <div class="identity-header">
+              <span class="designation-label">OPERATIVE DESIGNATION</span>
+              <button id="btn-edit-name" class="btn-text-action">Edit ✏️</button>
+            </div>
+            <h2 class="bot-display-name" id="bot-name-display">ZeroDay Nibbler 3000</h2>
+            <div class="bot-tags-row" id="bot-tags-row">
+              <span class="tag-pill tag-cyan">ETHICAL WHITE-HAT</span>
+              <span class="tag-pill tag-pink">MCP ENABLED</span>
+              <span class="tag-pill tag-green">CTF READY</span>
+            </div>
+          </div>
+
+          <!-- Interactive Holographic SVG Pedestal -->
+          <div class="hologram-stage-container">
+            <div class="stage-grid-bg"></div>
+            <div id="robot-avatar-container" class="robot-avatar-wrapper" title="Click me to make me purr!">
+              <!-- Dynamic SVG will be rendered here -->
+            </div>
+          </div>
+
+          <!-- Bottom Action Deck -->
+          <div class="action-deck-card">
+            <div class="deck-summary-row">
+              <div class="deck-spec">
+                <span class="spec-label">EST. VRAM:</span>
+                <span class="spec-val" id="spec-vram">~4.0 GB</span>
+              </div>
+              <div class="deck-spec">
+                <span class="spec-label">TARGET PORTS:</span>
+                <span class="spec-val" id="spec-ports">:3000, :8088, :9090</span>
+              </div>
+              <div class="deck-spec">
+                <span class="spec-label">CHALLENGES:</span>
+                <span class="spec-val neon-green">2 ACTIVE</span>
+              </div>
+            </div>
+
+            <div class="deck-button-group">
+              <button id="btn-compile-modal" class="btn-primary-action">
+                <span class="btn-glow"></span>
+                <span class="btn-label">⚡ COMPILE DOCKER BLUEPRINT</span>
+              </button>
+              <div class="sub-actions-row">
+                <button id="btn-direct-download" class="btn-secondary-action">
+                  <span>📥 Instant .zip Download</span>
+                </button>
+                <button id="btn-email-modal" class="btn-secondary-action">
+                  <span>📧 Private Email Dispatch</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RIGHT COLUMN: DIAGNOSTICS & GL1TCH-E AI COMPANION -->
+        <section class="diagnostics-column" aria-label="Bot Diagnostics and AI Mentor">
+          
+          <!-- Live Diagnostics HUD -->
+          <div class="card hud-card">
+            <h3 class="card-title">DIAGNOSTIC METRICS</h3>
+            <div class="metrics-list">
+              <div class="metric-item">
+                <div class="metric-header">
+                  <span>CUTENESS LEVEL</span>
+                  <span class="metric-val neon-pink" id="stat-cuteness">99% [CRITICAL]</span>
+                </div>
+                <div class="progress-bar-track">
+                  <div class="progress-bar-fill fill-pink" id="bar-cuteness" style="width: 99%;"></div>
+                </div>
+              </div>
+
+              <div class="metric-item">
+                <div class="metric-header">
+                  <span>CTF PROWESS</span>
+                  <span class="metric-val neon-cyan" id="stat-ctf">94% [L33T]</span>
+                </div>
+                <div class="progress-bar-track">
+                  <div class="progress-bar-fill fill-cyan" id="bar-ctf" style="width: 94%;"></div>
+                </div>
+              </div>
+
+              <div class="metric-item">
+                <div class="metric-header">
+                  <span>HARDWARE HUNGER</span>
+                  <span class="metric-val neon-amber" id="stat-vram">LOW-MEDIUM</span>
+                </div>
+                <div class="progress-bar-track">
+                  <div class="progress-bar-fill fill-amber" id="bar-vram" style="width: 45%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GL1TCH-E AI Assistant Chat Box -->
+          <div class="card mentor-card">
+            <div class="mentor-header">
+              <div class="mentor-avatar">
+                <span>🤖</span>
+                <span class="dot-online"></span>
+              </div>
+              <div class="mentor-meta">
+                <h3 class="mentor-name">GL1TCH-E</h3>
+                <span class="mentor-role">Master Botwright Mentor</span>
+              </div>
+            </div>
+
+            <div class="mentor-bubble" id="mentor-commentary">
+              "Assembling your companion! Pair DeepSeek reasoning with an MCP Cyber-deck for maximum CTF dominance."
+            </div>
+
+            <!-- Chat History Area -->
+            <div class="mentor-chat-history" id="mentor-chat-stream">
+              <div class="chat-msg msg-bot">
+                <span class="msg-sender">GL1TCH-E:</span>
+                <span class="msg-text">Welcome to the assembly floor! Ask me about your Docker config, VRAM limits, or the included White-Hat challenges.</span>
+              </div>
+            </div>
+
+            <!-- Quick Suggestion Chips -->
+            <div class="quick-chips-row">
+              <button class="chip-query" data-q="How do I connect my bot to MCP?">MCP Setup?</button>
+              <button class="chip-query" data-q="Explain the White-Hat CTF challenges">CTF Goals?</button>
+              <button class="chip-query" data-q="Will this run on my 8GB laptop?">8GB RAM?</button>
+            </div>
+
+            <!-- Chat Input Form -->
+            <form id="mentor-chat-form" class="mentor-input-form">
+              <input type="text" id="mentor-input" placeholder="Consult GL1TCH-E..." autocomplete="off" />
+              <button type="submit" id="btn-send-chat" aria-label="Send message">➔</button>
+            </form>
+          </div>
+
+          <!-- Live Build Terminal Output Log -->
+          <div class="card terminal-card">
+            <div class="terminal-bar">
+              <div class="terminal-dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+              </div>
+              <span class="terminal-title">FABRICATOR.LOG</span>
+            </div>
+            <div class="terminal-body" id="terminal-log">
+              <p class="term-line">> Initializing White-Hat Assembly Engine v1.0...</p>
+              <p class="term-line">> Checking local kernel compatibility... READY</p>
+              <p class="term-line">> Standing by for part selection...</p>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- ================= MODALS ================= -->
+
+      <!-- 1. Blueprint Preview & Export Modal -->
+      <div class="modal-overlay" id="blueprint-modal" aria-hidden="true">
+        <div class="modal-window modal-lg">
+          <div class="modal-header">
+            <h3>⚡ COMPILED DOCKER BLUEPRINT</h3>
+            <button class="btn-close-modal" id="btn-close-blueprint">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="blueprint-tabs" id="blueprint-tabs">
+              <button class="bp-tab active" data-file="docker-compose.yml">docker-compose.yml</button>
+              <button class="bp-tab" data-file="README.md">README.md</button>
+              <button class="bp-tab" data-file=".env.example">.env.example</button>
+              <button class="bp-tab" data-file="ctf-sandbox/mcp-server/mcp_server.py">mcp_server.py</button>
+              <button class="bp-tab" data-file="ctf-sandbox/web-target/index.html">ctf_target.html</button>
+            </div>
+            <pre class="blueprint-code-view"><code id="blueprint-code-content"></code></pre>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" id="btn-copy-code">📋 Copy Active File</button>
+            <button class="btn-primary" id="btn-modal-download-zip">📥 Download Full .zip Bundle</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Private Email Delivery Modal -->
+      <div class="modal-overlay" id="email-modal" aria-hidden="true">
+        <div class="modal-window">
+          <div class="modal-header">
+            <h3>📧 PRIVATE BUNDLE DELIVERY</h3>
+            <button class="btn-close-modal" id="btn-close-email">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p class="modal-intro">
+              Enter your email to receive your custom bot package. Your blueprint is compiled and dispatched via an ephemeral encrypted stream.
+            </p>
+            <div class="privacy-callout">
+              <span class="lock-icon">🔒</span>
+              <div>
+                <strong>Zero-Trace Guarantee:</strong>
+                <p>No database, no file storage. Your bundle is built in your browser and passed straight to the mail service. Your build is also saved in a link, so it can be rebuilt any time.</p>
+              </div>
+            </div>
+            <form id="email-form" class="modal-form">
+              <label for="input-user-email">Recipient Email Address:</label>
+              <input type="email" id="input-user-email" placeholder="whitehat@security.org" required />
+              <button type="submit" id="btn-submit-email" class="btn-primary full-width">
+                <span>🚀 Send Private Package</span>
+              </button>
+            </form>
+            <div id="email-status-msg" class="email-status-text"></div>
+            <div class="sub-actions-row" style="margin-top:12px;">
+              <button type="button" class="btn-secondary-action" id="btn-email-mailto"><span>✉️ Use my mail app</span></button>
+              <button type="button" class="btn-secondary-action" id="btn-email-share"><span>📤 Share .zip</span></button>
+              <button type="button" class="btn-secondary-action" id="btn-copy-share-link"><span>🔗 Copy rebuild link</span></button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <span class="fallback-note">Prefer not to use email?</span>
+            <button class="btn-link" id="btn-email-fallback-zip">Download .zip Directly</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Settings / BYOK Modal -->
+      <div class="modal-overlay" id="settings-modal" aria-hidden="true">
+        <div class="modal-window">
+          <div class="modal-header">
+            <h3>⚙️ WORKSHOP SETTINGS</h3>
+            <button class="btn-close-modal" id="btn-close-settings">&times;</button>
+          </div>
+          <div class="modal-body">
+            <h4>Bring Your Own Key (Optional)</h4>
+            <p class="modal-intro">
+              By default, GL1TCH-E utilizes free-tier serverless edge assistance or local heuristics. You can optionally supply your own Gemini or OpenAI key for unlimited tokens. Keys remain strictly stored in your browser's <code>localStorage</code>.
+            </p>
+            <div class="settings-field">
+              <label for="select-byok-provider">AI Provider:</label>
+              <select id="select-byok-provider" class="custom-select">
+                <option value="gemini">Google Gemini (Recommended)</option>
+                <option value="openai">OpenAI</option>
+              </select>
+            </div>
+            <div class="settings-field">
+              <label for="input-byok-key">API Key:</label>
+              <input type="password" id="input-byok-key" placeholder="AIzaSy... or sk-..." />
+            </div>
+            <button id="btn-save-byok" class="btn-primary full-width">Save Settings</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast Feedback Notifications -->
+      <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
