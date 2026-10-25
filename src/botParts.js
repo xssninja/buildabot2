@@ -377,6 +377,15 @@ export const SOURCE_PARTS = [
 ];
 
 // ---------------------------------------------------------------------------
+// FINISH // PAINT JOB  (purely cosmetic)
+// ---------------------------------------------------------------------------
+export const FINISH_PARTS = [
+  { id: 'neon', name: 'Neon Night', short: 'Neon', badge: 'Glossy navy + neon trim', icon: '🌃', funnyLore: 'Cool, dark and glowing. The classic cyberpunk look.', cuteness: 90, ctfProwess: 92 },
+  { id: 'pastel', name: 'Pastel Pop', short: 'Pastel', badge: 'Soft vinyl-toy colors', icon: '🍬', funnyLore: 'Pink, lilac and cream. Maximum cuteness, same brains.', cuteness: 99, ctfProwess: 88 },
+  { id: 'holo', name: 'Holo Chrome', short: 'Holo', badge: 'Silver chrome + neon glow', icon: '💿', funnyLore: 'Shiny chrome with a pink-and-cyan sheen. Very futuristic.', cuteness: 94, ctfProwess: 94 }
+];
+
+// ---------------------------------------------------------------------------
 // Compatibility helpers
 // ---------------------------------------------------------------------------
 export function findPart(list, id) {
@@ -407,6 +416,7 @@ export function normalizeConfig(config) {
   }
   cfg.heartId = heart.id;
   if (!SOURCE_PARTS.some(s => s.id === cfg.sourceId)) cfg.sourceId = 'internet';
+  if (!FINISH_PARTS.some(f => f.id === cfg.finishId)) cfg.finishId = 'neon';
   if (head.engine === 'cloud') cfg.sourceId = 'internet';
   cfg.bodyId = findPart(BODY_PARTS, cfg.bodyId).id;
   cfg.feetId = findPart(FEET_PARTS, cfg.feetId).id;

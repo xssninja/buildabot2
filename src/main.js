@@ -1,6 +1,6 @@
 // Build-A-Bot: The Cybernetic AI Deployment Fabricator Main Orchestrator
 import './style.css';
-import { HEAD_PARTS, BODY_PARTS, HEART_PARTS, FEET_PARTS, GPU_PARTS, SOURCE_PARTS, ACCESSORY_PARTS, generateFunnyName, normalizeConfig, estimateVram, findPart, isHeartCompatible, isHeadGpuCompatible } from './botParts.js';
+import { HEAD_PARTS, BODY_PARTS, HEART_PARTS, FEET_PARTS, GPU_PARTS, SOURCE_PARTS, FINISH_PARTS, ACCESSORY_PARTS, generateFunnyName, normalizeConfig, estimateVram, findPart, isHeartCompatible, isHeadGpuCompatible } from './botParts.js';
 import { renderBotSvg } from './botRenderer.js';
 import { generateBundle } from './dockerGenerator.js';
 import { downloadZipBundle, sendEmailRecipe, decodeConfig, buildShareUrl, openMailtoWithLink, shareZip } from './delivery.js';
@@ -17,6 +17,7 @@ const state = {
     feetId: 'mcp-deck',
     gpuId: 'nvidia',
     sourceId: 'internet',
+    finishId: 'neon',
     accessories: ['rubber-duck']
   },
   activeFile: 'docker-compose.yml',
@@ -183,6 +184,7 @@ function renderSlots() {
     { key: 'feetId', title: 'FEET // MCP TOOLS', icon: '🦿', parts: FEET_PARTS },
     { key: 'gpuId', title: 'POWER SUPPLY // GPU', icon: '🔋', parts: GPU_PARTS },
     { key: 'sourceId', title: 'MODEL SOURCE // SUPPLY LINE', icon: '📦', parts: SOURCE_PARTS },
+    { key: 'finishId', title: 'FINISH // PAINT JOB', icon: '🎨', parts: FINISH_PARTS },
     { key: 'accessories', title: 'ACCESSORIES // MODS', icon: '🎩', parts: ACCESSORY_PARTS, isMulti: true }
   ];
 

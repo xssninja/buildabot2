@@ -1,8 +1,15 @@
 // Interactive SVG Cyber-Bot Visualizer Engine
 // Generates a dynamic, animated, scalable cybernetic robot mascot reflecting custom parts
 
+export const FINISHES = {
+  neon:   { s: ['#3b4d6b', '#1c2638', '#101727'], p: ['#55657f', '#252f42'], glow: false },
+  pastel: { s: ['#fff4fb', '#f3d9f2', '#d8c2ef'], p: ['#ffffff', '#cfe9f7'], glow: false },
+  holo:   { s: ['#e9f3ff', '#a9b8d6', '#6f7fa3'], p: ['#ffd6f5', '#9fe8ff'], glow: true }
+};
+
 export function renderBotSvg(config) {
   const { headId, bodyId, heartId, feetId, accessories = [] } = config;
+  const T = FINISHES[config.finishId] || FINISHES.neon;
 
   // Visual Palette
   const neonCyan = '#00f5d4';
@@ -49,18 +56,18 @@ export function renderBotSvg(config) {
       <g id="feet-treads" class="part-group">
         <!-- Left Tread -->
         <g transform="translate(60, 290)">
-          <rect x="0" y="0" width="75" height="42" rx="12" fill="${darkMetal}" stroke="${neonCyan}" stroke-width="2" />
-          <circle cx="15" cy="21" r="11" fill="${lightMetal}" stroke="${neonCyan}" stroke-width="1.5" class="anim-spin" />
-          <circle cx="37" cy="21" r="11" fill="${lightMetal}" stroke="${neonCyan}" stroke-width="1.5" class="anim-spin" />
-          <circle cx="60" cy="21" r="11" fill="${lightMetal}" stroke="${neonCyan}" stroke-width="1.5" class="anim-spin" />
+          <rect x="0" y="0" width="75" height="42" rx="12" fill="url(#bb-shell)" stroke="${neonCyan}" stroke-width="2" />
+          <circle cx="15" cy="21" r="11" fill="url(#bb-panel)" stroke="${neonCyan}" stroke-width="1.5" class="anim-spin" />
+          <circle cx="37" cy="21" r="11" fill="url(#bb-panel)" stroke="${neonCyan}" stroke-width="1.5" class="anim-spin" />
+          <circle cx="60" cy="21" r="11" fill="url(#bb-panel)" stroke="${neonCyan}" stroke-width="1.5" class="anim-spin" />
           <line x1="2" y1="21" x2="73" y2="21" stroke="${neonCyan}" stroke-dasharray="4 3" stroke-width="2" />
         </g>
         <!-- Right Tread -->
         <g transform="translate(185, 290)">
-          <rect x="0" y="0" width="75" height="42" rx="12" fill="${darkMetal}" stroke="${neonCyan}" stroke-width="2" />
-          <circle cx="15" cy="21" r="11" fill="${lightMetal}" stroke="${neonCyan}" stroke-width="1.5" class="anim-spin" />
-          <circle cx="37" cy="21" r="11" fill="${lightMetal}" stroke="${neonCyan}" stroke-width="1.5" class="anim-spin" />
-          <circle cx="60" cy="21" r="11" fill="${lightMetal}" stroke="${neonCyan}" stroke-width="1.5" class="anim-spin" />
+          <rect x="0" y="0" width="75" height="42" rx="12" fill="url(#bb-shell)" stroke="${neonCyan}" stroke-width="2" />
+          <circle cx="15" cy="21" r="11" fill="url(#bb-panel)" stroke="${neonCyan}" stroke-width="1.5" class="anim-spin" />
+          <circle cx="37" cy="21" r="11" fill="url(#bb-panel)" stroke="${neonCyan}" stroke-width="1.5" class="anim-spin" />
+          <circle cx="60" cy="21" r="11" fill="url(#bb-panel)" stroke="${neonCyan}" stroke-width="1.5" class="anim-spin" />
           <line x1="2" y1="21" x2="73" y2="21" stroke="${neonCyan}" stroke-dasharray="4 3" stroke-width="2" />
         </g>
       </g>
@@ -73,8 +80,8 @@ export function renderBotSvg(config) {
         <ellipse cx="98" cy="328" rx="16" ry="7" fill="${neonPink}" opacity="0.8" class="anim-pulse" />
         <ellipse cx="222" cy="328" rx="16" ry="7" fill="${neonPink}" opacity="0.8" class="anim-pulse" />
         <!-- Hover Boots -->
-        <path d="M75,285 L120,285 L115,318 L80,318 Z" fill="${darkMetal}" stroke="${neonPink}" stroke-width="2" />
-        <path d="M200,285 L245,285 L240,318 L205,318 Z" fill="${darkMetal}" stroke="${neonPink}" stroke-width="2" />
+        <path d="M75,285 L120,285 L115,318 L80,318 Z" fill="url(#bb-shell)" stroke="${neonPink}" stroke-width="2" />
+        <path d="M200,285 L245,285 L240,318 L205,318 Z" fill="url(#bb-shell)" stroke="${neonPink}" stroke-width="2" />
         <!-- Glowing energy nozzles -->
         <rect x="83" y="315" width="28" height="6" rx="2" fill="${neonPink}" />
         <rect x="208" y="315" width="28" height="6" rx="2" fill="${neonPink}" />
@@ -86,11 +93,11 @@ export function renderBotSvg(config) {
       <g id="feet-ninja" class="part-group">
         <!-- Left Leg -->
         <line x1="100" y1="280" x2="95" y2="305" stroke="${neonGreen}" stroke-width="6" stroke-linecap="round" />
-        <path d="M75,305 L115,305 L120,325 L70,325 Z" fill="${darkMetal}" stroke="${neonGreen}" stroke-width="2" />
+        <path d="M75,305 L115,305 L120,325 L70,325 Z" fill="url(#bb-shell)" stroke="${neonGreen}" stroke-width="2" />
         <circle cx="95" cy="315" r="4" fill="${neonGreen}" />
         <!-- Right Leg -->
         <line x1="220" y1="280" x2="225" y2="305" stroke="${neonGreen}" stroke-width="6" stroke-linecap="round" />
-        <path d="M205,305 L245,305 L250,325 L200,325 Z" fill="${darkMetal}" stroke="${neonGreen}" stroke-width="2" />
+        <path d="M205,305 L245,305 L250,325 L200,325 Z" fill="url(#bb-shell)" stroke="${neonGreen}" stroke-width="2" />
         <circle cx="225" cy="315" r="4" fill="${neonGreen}" />
       </g>
     `;
@@ -99,7 +106,7 @@ export function renderBotSvg(config) {
     feetSvg = `
       <g id="feet-maglev" class="part-group">
         <ellipse cx="160" cy="320" rx="70" ry="14" fill="${neonPurple}" opacity="0.3" class="anim-pulse" />
-        <path d="M100,285 Q160,305 220,285 L205,305 Q160,320 115,305 Z" fill="${darkMetal}" stroke="${neonPurple}" stroke-width="2" />
+        <path d="M100,285 Q160,305 220,285 L205,305 Q160,320 115,305 Z" fill="url(#bb-shell)" stroke="${neonPurple}" stroke-width="2" />
         <circle cx="125" cy="298" r="6" fill="${neonPurple}" class="anim-pulse" />
         <circle cx="160" cy="303" r="7" fill="${neonCyan}" class="anim-pulse" />
         <circle cx="195" cy="298" r="6" fill="${neonPurple}" class="anim-pulse" />
@@ -124,7 +131,7 @@ export function renderBotSvg(config) {
           <path d="M275,210 Q295,200 285,185 M275,210 Q300,225 285,235" fill="none" stroke="${neonPink}" stroke-width="4" stroke-linecap="round" />
         </g>
         <!-- Main Torso Chassis -->
-        <rect x="85" y="160" width="150" height="125" rx="18" fill="${darkMetal}" stroke="${neonPink}" stroke-width="2" />
+        <rect x="85" y="160" width="150" height="125" rx="18" fill="url(#bb-shell)" stroke="${neonPink}" stroke-width="2" />
         <path d="M100,165 L220,165 L210,185 L110,185 Z" fill="${highlightMetal}" opacity="0.6" />
         <!-- Armor Rivets -->
         <circle cx="95" cy="172" r="3" fill="${neonPink}" />
@@ -148,8 +155,8 @@ export function renderBotSvg(config) {
         <circle cx="140" cy="265" r="4" fill="${neonCyan}" />
         <circle cx="180" cy="265" r="4" fill="${neonPink}" />
         <!-- Left & Right Hands -->
-        <rect x="58" y="195" width="26" height="50" rx="8" fill="${lightMetal}" stroke="${neonAmber}" stroke-width="1.5" />
-        <rect x="236" y="195" width="26" height="50" rx="8" fill="${lightMetal}" stroke="${neonAmber}" stroke-width="1.5" />
+        <rect x="58" y="195" width="26" height="50" rx="8" fill="url(#bb-panel)" stroke="${neonAmber}" stroke-width="1.5" />
+        <rect x="236" y="195" width="26" height="50" rx="8" fill="url(#bb-panel)" stroke="${neonAmber}" stroke-width="1.5" />
       </g>
     `;
   } else if (bodyId === 'autogen') {
@@ -158,18 +165,18 @@ export function renderBotSvg(config) {
       <g id="body-autogen" class="part-group">
         <!-- Orbiting Mini-Drones -->
         <g class="anim-float-left">
-          <circle cx="48" cy="165" r="14" fill="${darkMetal}" stroke="${neonGreen}" stroke-width="2" />
+          <circle cx="48" cy="165" r="14" fill="url(#bb-shell)" stroke="${neonGreen}" stroke-width="2" />
           <circle cx="48" cy="165" r="5" fill="${neonGreen}" />
           <line x1="48" y1="151" x2="48" y2="145" stroke="${neonGreen}" stroke-width="2" />
         </g>
         <g class="anim-float-right">
-          <circle cx="272" cy="165" r="14" fill="${darkMetal}" stroke="${neonGreen}" stroke-width="2" />
+          <circle cx="272" cy="165" r="14" fill="url(#bb-shell)" stroke="${neonGreen}" stroke-width="2" />
           <circle cx="272" cy="165" r="5" fill="${neonGreen}" />
           <line x1="272" y1="151" x2="272" y2="145" stroke="${neonGreen}" stroke-width="2" />
         </g>
         <!-- Heavy Swarm Core Torso -->
-        <rect x="85" y="160" width="150" height="125" rx="16" fill="${darkMetal}" stroke="${neonGreen}" stroke-width="2" />
-        <rect x="95" y="248" width="130" height="25" rx="6" fill="${lightMetal}" />
+        <rect x="85" y="160" width="150" height="125" rx="16" fill="url(#bb-shell)" stroke="${neonGreen}" stroke-width="2" />
+        <rect x="95" y="248" width="130" height="25" rx="6" fill="url(#bb-panel)" />
         <!-- LED indicator rack -->
         <circle cx="110" cy="260" r="3.5" fill="${neonGreen}" class="anim-pulse" />
         <circle cx="125" cy="260" r="3.5" fill="${neonCyan}" class="anim-pulse" />
@@ -182,13 +189,13 @@ export function renderBotSvg(config) {
     // Reinforced Safe-Chest
     bodySvg = `
       <g id="body-anythingllm" class="part-group">
-        <rect x="85" y="160" width="150" height="125" rx="12" fill="${darkMetal}" stroke="${neonAmber}" stroke-width="2.5" />
+        <rect x="85" y="160" width="150" height="125" rx="12" fill="url(#bb-shell)" stroke="${neonAmber}" stroke-width="2.5" />
         <!-- Safe combination dial rim -->
-        <circle cx="160" cy="225" r="38" fill="${lightMetal}" stroke="${neonAmber}" stroke-width="2" />
-        <circle cx="160" cy="225" r="28" fill="${darkMetal}" stroke="${neonCyan}" stroke-width="1.5" />
+        <circle cx="160" cy="225" r="38" fill="url(#bb-panel)" stroke="${neonAmber}" stroke-width="2" />
+        <circle cx="160" cy="225" r="28" fill="url(#bb-shell)" stroke="${neonCyan}" stroke-width="1.5" />
         <!-- Side arms -->
-        <rect x="58" y="185" width="26" height="60" rx="8" fill="${lightMetal}" stroke="${neonAmber}" stroke-width="1.5" />
-        <rect x="236" y="185" width="26" height="60" rx="8" fill="${lightMetal}" stroke="${neonAmber}" stroke-width="1.5" />
+        <rect x="58" y="185" width="26" height="60" rx="8" fill="url(#bb-panel)" stroke="${neonAmber}" stroke-width="1.5" />
+        <rect x="236" y="185" width="26" height="60" rx="8" fill="url(#bb-panel)" stroke="${neonAmber}" stroke-width="1.5" />
       </g>
     `;
   } else {
@@ -196,12 +203,12 @@ export function renderBotSvg(config) {
     bodySvg = `
       <g id="body-openwebui" class="part-group">
         <!-- Arms -->
-        <rect x="56" y="180" width="28" height="65" rx="10" fill="${lightMetal}" stroke="${neonCyan}" stroke-width="1.5" />
-        <rect x="236" y="180" width="28" height="65" rx="10" fill="${lightMetal}" stroke="${neonCyan}" stroke-width="1.5" />
+        <rect x="56" y="180" width="28" height="65" rx="10" fill="url(#bb-panel)" stroke="${neonCyan}" stroke-width="1.5" />
+        <rect x="236" y="180" width="28" height="65" rx="10" fill="url(#bb-panel)" stroke="${neonCyan}" stroke-width="1.5" />
         <circle cx="70" cy="235" r="5" fill="${neonCyan}" />
         <circle cx="250" cy="235" r="5" fill="${neonCyan}" />
         <!-- Main Chassis -->
-        <rect x="85" y="160" width="150" height="125" rx="20" fill="${darkMetal}" stroke="${neonCyan}" stroke-width="2.5" />
+        <rect x="85" y="160" width="150" height="125" rx="20" fill="url(#bb-shell)" stroke="${neonCyan}" stroke-width="2.5" />
         <path d="M100,175 Q160,185 220,175" stroke="${highlightMetal}" stroke-width="3" fill="none" />
         <!-- Status Equalizer Audio Bars -->
         <g transform="translate(100, 252)">
@@ -238,20 +245,20 @@ export function renderBotSvg(config) {
         <rect x="145" y="145" width="30" height="18" fill="${highlightMetal}" />
         <!-- Left Turbine Fan -->
         <g transform="translate(68, 80)">
-          <circle cx="15" cy="25" r="20" fill="${darkMetal}" stroke="${neonCyan}" stroke-width="2" />
+          <circle cx="15" cy="25" r="20" fill="url(#bb-shell)" stroke="${neonCyan}" stroke-width="2" />
           <line x1="5" y1="25" x2="25" y2="25" stroke="${neonCyan}" stroke-width="2" class="anim-spin" />
           <line x1="15" y1="15" x2="15" y2="35" stroke="${neonCyan}" stroke-width="2" class="anim-spin" />
         </g>
         <!-- Right Turbine Fan -->
         <g transform="translate(222, 80)">
-          <circle cx="15" cy="25" r="20" fill="${darkMetal}" stroke="${neonCyan}" stroke-width="2" />
+          <circle cx="15" cy="25" r="20" fill="url(#bb-shell)" stroke="${neonCyan}" stroke-width="2" />
           <line x1="5" y1="25" x2="25" y2="25" stroke="${neonCyan}" stroke-width="2" class="anim-spin" />
           <line x1="15" y1="15" x2="15" y2="35" stroke="${neonCyan}" stroke-width="2" class="anim-spin" />
         </g>
         <!-- Main Helmet Box -->
-        <rect x="95" y="55" width="130" height="95" rx="16" fill="${darkMetal}" stroke="${neonCyan}" stroke-width="2.5" />
+        <rect x="95" y="55" width="130" height="95" rx="16" fill="url(#bb-shell)" stroke="${neonCyan}" stroke-width="2.5" />
         <!-- High-tech Sleek Visor Eye -->
-        <rect x="108" y="82" width="104" height="28" rx="8" fill="#030712" stroke="${neonCyan}" stroke-width="1.5" />
+        <rect x="108" y="82" width="104" height="28" rx="8" fill="url(#bb-screen)" stroke="${neonCyan}" stroke-width="1.5" />
         <line x1="114" y1="96" x2="206" y2="96" stroke="${neonCyan}" stroke-width="4" stroke-linecap="round" class="anim-pulse" />
         <text x="160" y="132" fill="${neonCyan}" font-family="monospace" font-size="9" text-anchor="middle">PAGED_ATTN // VLLM</text>
       </g>
@@ -263,7 +270,7 @@ export function renderBotSvg(config) {
         <!-- Neck -->
         <rect x="145" y="145" width="30" height="18" fill="${highlightMetal}" />
         <!-- Head Chassis -->
-        <rect x="95" y="55" width="130" height="95" rx="18" fill="${darkMetal}" stroke="${neonAmber}" stroke-width="2.5" />
+        <rect x="95" y="55" width="130" height="95" rx="18" fill="url(#bb-shell)" stroke="${neonAmber}" stroke-width="2.5" />
         <!-- Left Eye (Normal) -->
         <circle cx="130" cy="95" r="9" fill="${neonAmber}" class="anim-blink" />
         <!-- Right Eye with Monocle HUD -->
@@ -271,7 +278,7 @@ export function renderBotSvg(config) {
         <circle cx="190" cy="95" r="8" fill="${neonCyan}" class="anim-pulse" />
         <line x1="206" y1="95" x2="225" y2="120" stroke="${neonCyan}" stroke-width="1.5" />
         <!-- Mustache / Grill -->
-        <path d="M140,126 Q160,118 180,126" stroke="${neonAmber}" stroke-width="2.5" fill="none" stroke-linecap="round" />
+        <path d="M144,120 Q160,132 176,120" stroke="${neonAmber}" stroke-width="2.5" fill="none" stroke-linecap="round" />
       </g>
     `;
   } else if (headId === 'localai') {
@@ -281,7 +288,7 @@ export function renderBotSvg(config) {
         <!-- Neck -->
         <rect x="145" y="145" width="30" height="18" fill="${highlightMetal}" />
         <!-- Head Dome -->
-        <rect x="95" y="55" width="130" height="95" rx="28" fill="${darkMetal}" stroke="${neonGreen}" stroke-width="2.5" />
+        <rect x="95" y="55" width="130" height="95" rx="28" fill="url(#bb-shell)" stroke="${neonGreen}" stroke-width="2.5" />
         <!-- Triple Optical Sensors -->
         <circle cx="130" cy="85" r="11" fill="#052e16" stroke="${neonGreen}" stroke-width="2" />
         <circle cx="130" cy="85" r="5" fill="${neonGreen}" class="anim-pulse" />
@@ -305,11 +312,11 @@ export function renderBotSvg(config) {
         <line x1="195" y1="55" x2="210" y2="30" stroke="${neonPurple}" stroke-width="3" stroke-linecap="round" />
         <circle cx="210" cy="30" r="5" fill="${neonPurple}" class="anim-pulse" />
         <!-- Head Box -->
-        <rect x="95" y="55" width="130" height="95" rx="20" fill="${darkMetal}" stroke="${neonPink}" stroke-width="2.5" />
+        <rect x="95" y="55" width="130" height="95" rx="20" fill="url(#bb-shell)" stroke="${neonPink}" stroke-width="2.5" />
         <!-- Colorful Dual Screens -->
-        <circle cx="135" cy="95" r="14" fill="#030712" stroke="${neonPink}" stroke-width="2" />
+        <circle cx="135" cy="95" r="14" fill="url(#bb-screen)" stroke="${neonPink}" stroke-width="2" />
         <text x="135" y="100" fill="${neonPink}" font-size="12" text-anchor="middle">🎨</text>
-        <circle cx="185" cy="95" r="14" fill="#030712" stroke="${neonPurple}" stroke-width="2" />
+        <circle cx="185" cy="95" r="14" fill="url(#bb-screen)" stroke="${neonPurple}" stroke-width="2" />
         <text x="185" y="100" fill="${neonCyan}" font-size="12" text-anchor="middle">✨</text>
         <!-- Smile -->
         <path d="M145,125 Q160,136 175,125" stroke="${neonPink}" stroke-width="2.5" fill="none" stroke-linecap="round" />
@@ -322,18 +329,18 @@ export function renderBotSvg(config) {
         <!-- Neck -->
         <rect x="145" y="145" width="30" height="18" fill="${highlightMetal}" />
         <!-- Cat Ear Left -->
-        <polygon points="105,58 128,24 140,58" fill="${darkMetal}" stroke="${neonCyan}" stroke-width="2.5" />
+        <polygon points="105,58 128,24 140,58" fill="url(#bb-shell)" stroke="${neonCyan}" stroke-width="2.5" />
         <polygon points="112,56 128,32 136,56" fill="${neonPink}" opacity="0.8" />
         <!-- Cat Ear Right -->
-        <polygon points="180,58 192,24 215,58" fill="${darkMetal}" stroke="${neonCyan}" stroke-width="2.5" />
+        <polygon points="180,58 192,24 215,58" fill="url(#bb-shell)" stroke="${neonCyan}" stroke-width="2.5" />
         <polygon points="184,56 192,32 208,56" fill="${neonPink}" opacity="0.8" />
         <!-- Antenna -->
         <line x1="225" y1="65" x2="242" y2="40" stroke="${neonCyan}" stroke-width="2" />
         <circle cx="242" cy="40" r="4" fill="${neonCyan}" class="anim-pulse" />
         <!-- CRT Monitor Shell -->
-        <rect x="95" y="55" width="130" height="95" rx="18" fill="${darkMetal}" stroke="${neonCyan}" stroke-width="2.5" />
+        <rect x="95" y="55" width="130" height="95" rx="18" fill="url(#bb-shell)" stroke="${neonCyan}" stroke-width="2.5" />
         <!-- Inner CRT Screen -->
-        <rect x="106" y="66" width="108" height="73" rx="10" fill="#030712" stroke="${highlightMetal}" stroke-width="1.5" />
+        <rect x="106" y="66" width="108" height="73" rx="10" fill="url(#bb-screen)" stroke="${highlightMetal}" stroke-width="1.5" />
         <!-- Kawaii Blinking Eyes & Mouth -->
         <g class="anim-blink">
           <!-- Left Eye (^ shape) -->
@@ -386,7 +393,7 @@ export function renderBotSvg(config) {
       <g id="acc-tail">
         <path d="M235,270 C280,270 290,230 300,190" fill="none" stroke="${neonAmber}" stroke-width="4" stroke-linecap="round" stroke-dasharray="6 3" />
         <!-- RJ45 Plug head -->
-        <rect x="290" y="175" width="22" height="16" rx="3" fill="${darkMetal}" stroke="${neonAmber}" stroke-width="2" />
+        <rect x="290" y="175" width="22" height="16" rx="3" fill="url(#bb-shell)" stroke="${neonAmber}" stroke-width="2" />
         <circle cx="296" cy="183" r="2.5" fill="${neonGreen}" class="anim-pulse" />
         <circle cx="304" cy="183" r="2.5" fill="${neonAmber}" class="anim-pulse" />
       </g>
@@ -408,8 +415,33 @@ export function renderBotSvg(config) {
 
   // Complete SVG Canvas
   return `
-    <svg viewBox="0 0 320 370" width="100%" height="100%" class="bot-svg-canvas" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 320 370" width="100%" height="100%" class="bot-svg-canvas finish-${config.finishId || 'neon'}" xmlns="http://www.w3.org/2000/svg">
       <defs>
+        <!-- Glossy toy-plastic shading -->
+        <linearGradient id="bb-shell" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${T.s[0]}" />
+          <stop offset="55%" stop-color="${T.s[1]}" />
+          <stop offset="100%" stop-color="${T.s[2]}" />
+        </linearGradient>
+        <linearGradient id="bb-panel" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${T.p[0]}" />
+          <stop offset="100%" stop-color="${T.p[1]}" />
+        </linearGradient>
+        <radialGradient id="bb-screen" cx="50%" cy="40%" r="75%">
+          <stop offset="0%" stop-color="#0d2b33" />
+          <stop offset="100%" stop-color="#03070f" />
+        </radialGradient>
+        <linearGradient id="bb-gloss" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.45" />
+          <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+        </linearGradient>
+        <radialGradient id="bb-blush" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ff7eb6" stop-opacity="0.85" />
+          <stop offset="100%" stop-color="#ff7eb6" stop-opacity="0" />
+        </radialGradient>
+        <filter id="bb-soft" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.55" />
+        </filter>
         <!-- Gradients -->
         <linearGradient id="pedestalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stop-color="#1f2937" />
@@ -427,17 +459,31 @@ export function renderBotSvg(config) {
         <!-- Pedestal Tier 1 -->
         <ellipse cx="160" cy="342" rx="115" ry="18" fill="url(#pedestalGrad)" stroke="${neonCyan}" stroke-width="2" />
         <!-- Pedestal Ring 2 -->
-        <ellipse cx="160" cy="336" rx="90" ry="12" fill="${darkMetal}" stroke="${neonCyan}" stroke-width="1.5" />
+        <ellipse cx="160" cy="336" rx="90" ry="12" fill="url(#bb-shell)" stroke="${neonCyan}" stroke-width="1.5" />
         <line x1="70" y1="336" x2="250" y2="336" stroke="${neonCyan}" stroke-width="1" stroke-dasharray="6 4" opacity="0.6" />
         <text x="160" y="360" fill="${neonCyan}" font-family="monospace" font-size="9" text-anchor="middle" letter-spacing="2">ASSEMBLY BAY // ACTIVE</text>
       </g>
 
-      <!-- Assembly Layers in Z-Order -->
+      <!-- Assembly Layers in Z-Order (bobbing gently) -->
+      <g class="bot-idle" filter="url(#bb-soft)" ${T.glow ? 'style="filter: drop-shadow(0 0 6px rgba(0,245,212,.55)) drop-shadow(0 6px 6px rgba(0,0,0,.5))"' : ''}>
       ${feetSvg}
       ${bodySvg}
+      <!-- Glass highlight on the body -->
+      <rect x="95" y="166" width="130" height="16" rx="8" fill="url(#bb-gloss)" pointer-events="none" />
       ${heartSvg}
       ${headSvg}
+      <!-- Glass highlight + blush cheeks on the head -->
+      <rect x="104" y="60" width="112" height="16" rx="8" fill="url(#bb-gloss)" pointer-events="none" />
+      <ellipse cx="122" cy="117" rx="11" ry="6" fill="url(#bb-blush)" pointer-events="none" />
+      <ellipse cx="198" cy="117" rx="11" ry="6" fill="url(#bb-blush)" pointer-events="none" />
       ${accSvg}
+      </g>
+      <!-- Sparkles -->
+      <g fill="#ffffff" pointer-events="none">
+        <path class="bb-twinkle" d="M42,90 l3,8 l8,3 l-8,3 l-3,8 l-3,-8 l-8,-3 l8,-3 z" opacity="0.8" />
+        <path class="bb-twinkle bb-t2" d="M276,120 l2,6 l6,2 l-6,2 l-2,6 l-2,-6 l-6,-2 l6,-2 z" opacity="0.7" />
+        <path class="bb-twinkle bb-t3" d="M262,40 l2,5 l5,2 l-5,2 l-2,5 l-2,-5 l-5,-2 l5,-2 z" opacity="0.6" />
+      </g>
     </svg>
   `;
 }

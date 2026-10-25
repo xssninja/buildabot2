@@ -1,6 +1,7 @@
 // Hub page: path cards + a working Docker Gacha
 import './hub.css';
-import { generateFunnyName, BODY_PARTS, FEET_PARTS, normalizeConfig } from './botParts.js';
+import { generateFunnyName, BODY_PARTS, FEET_PARTS, FINISH_PARTS, normalizeConfig } from './botParts.js';
+import { renderBotSvg } from './botRenderer.js';
 import { downloadZipBundle, encodeConfig } from './delivery.js';
 
 // Old share links pointed at "/?bot=..." – send them to the workshop
@@ -33,6 +34,7 @@ function roll() {
     sourceId: GACHA.sourceId,
     bodyId: pick(GACHA.bodies),
     feetId: pick(GACHA.feet),
+    finishId: pick(FINISH_PARTS).id,
     accessories: [pick(GACHA.accessories)]
   });
   render();
@@ -59,7 +61,9 @@ function render() {
     return d;
   }));
   document.getElementById('g-spins').textContent = spins;
-  document.getElementById('g-name').textContent = `Your bot: ${config.name}`;
+  const finish = FINISH_PARTS.find(f => f.id === config.finishId);
+  document.getElementById('g-name').textContent = `Your bot: ${config.name} · ${finish.name} finish`;
+  document.getElementById('g-bot').innerHTML = renderBotSvg(config);
   document.getElementById('g-customize').href = `/builder.html?bot=${encodeConfig(config)}`;
 }
 
