@@ -3,6 +3,8 @@ import './hub.css';
 import { generateFunnyName, BODY_PARTS, FEET_PARTS, FINISH_PARTS, normalizeConfig } from './botParts.js';
 import { renderBotSvg } from './botRenderer.js';
 import { downloadZipBundle, encodeConfig } from './delivery.js';
+import { CONFERENCE } from './conference.js';
+import { ensureSourceAck } from './lanAck.js';
 
 // Old share links pointed at "/?bot=..." – send them to the workshop
 if (new URLSearchParams(location.search).has('bot')) {
@@ -14,7 +16,7 @@ const GACHA = {
   headId: 'llamacpp',
   heartId: 'potato',   // Qwen3 1.7B
   gpuId: 'cpu',
-  sourceId: 'internet',
+  sourceId: CONFERENCE.enabled ? 'share' : 'internet',
   bodies: ['flowise', 'anythingllm'],
   feet: ['mcp-deck', 'workspace', 'chroma-tank'],
   accessories: ['rubber-duck', 'tinfoil-hat', 'ethernet-tail', 'scanline-visor']
@@ -44,7 +46,7 @@ function render() {
   const body = BODY_PARTS.find(b => b.id === config.bodyId);
   const feet = FEET_PARTS.find(f => f.id === config.feetId);
   const capsules = [
-    ['MODEL', 'Qwen3 1.7B', 'small download (~1.5 GB), runs on CPU'],
+    ['MODEL', 'Qwen3 1.7B', config.sourceId === 'share' ? 'loads from the LAN share, runs on CPU' : 'small download (~1.5 GB), runs on CPU'],
     ['ENGINE', 'llama.cpp (CPU)', 'slim image, no GPU needed'],
     ['UI', body.short, body.badge],
     ['MCP TOOL', feet.short, feet.badge]
@@ -71,7 +73,12 @@ document.getElementById('g-spin').addEventListener('click', roll);
 document.getElementById('g-download').addEventListener('click', async e => {
   const btn = e.currentTarget;
   btn.disabled = true;
-  try { await downloadZipBundle(config); } finally { btn.disabled = false; }
+  try {
+    const cfg = await ensureSourceAck(config);
+    if (!cfg) return;
+    config = cfg; render();
+    await downloadZipBundle(config);
+  } finally { btn.disabled = false; }
 });
 
 roll();

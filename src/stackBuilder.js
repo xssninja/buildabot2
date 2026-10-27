@@ -1,6 +1,7 @@
 // Builds the core Docker stack (engine, model, UI, MCP tools, GPU, ports, network).
 // Output is plain YAML text. Compose-level variables (${VAR:-default}) are kept
 // literal so users can change ports/models in .env without re-downloading.
+import { LAN_MODE } from './conference.js';
 import { HEAD_PARTS, BODY_PARTS, HEART_PARTS, FEET_PARTS, GPU_PARTS, SOURCE_PARTS, findPart, normalizeConfig } from './botParts.js';
 
 const NET = ['    networks:', '      - buildabot-net'];
@@ -112,9 +113,31 @@ function ollamaSeed() {
   ];
 }
 
+// Downloads the model from the LAN web server into this bot's own volume
+// (resumable, checksum-verified for Ollama), then exits. See model-fetch/fetch.py.
+function modelFetch(mode) {
+  return [
+    '  # One-shot helper: downloads the model from the LAN model server (not the internet), then exits.',
+    '  model-fetch:',
+    '    image: python:3.12-alpine',
+    '    container_name: buildabot-model-fetch',
+    '    restart: "no"',
+    '    environment:',
+    '      - MODELS_URL=${MODELS_URL}',
+    `      - FETCH_MODE=${mode}`,
+    ...(mode === 'ollama' ? ['      - MODEL_NAME=${MODEL_NAME}'] : ['      - MODEL_FILE=${MODEL_FILE}']),
+    '    volumes:',
+    '      - ./model-fetch:/app:ro',
+    mode === 'ollama' ? '      - ollama_models:/dest' : '      - llamacpp_models:/models',
+    '    command: ["python", "/app/fetch.py"]',
+    ...NET
+  ];
+}
+
 function headService(cfg, llm, heart) {
   const g = cfg.gpuId;
-  const share = cfg.sourceId === 'share';
+  const lanUrl = cfg.sourceId === 'share' && LAN_MODE === 'url';
+  const share = cfg.sourceId === 'share' && !lanUrl;
   if (llm.engine === 'ollama') {
     const image = g === 'amd' ? 'ollama/ollama:rocm' : 'ollama/ollama:latest';
     return [
@@ -137,9 +160,10 @@ function headService(cfg, llm, heart) {
       '      retries: 30',
       ...gpuLines(g),
       ...(share ? ['    depends_on:', '      ollama-seed:', '        condition: service_completed_successfully'] : []),
+      ...(lanUrl ? ['    depends_on:', '      model-fetch:', '        condition: service_completed_successfully'] : []),
       ...NET,
       '',
-      ...(share ? ollamaSeed() : ollamaPull(image, llm))
+      ...(share ? ollamaSeed() : lanUrl ? modelFetch('ollama') : ollamaPull(image, llm))
     ];
   }
   if (llm.engine === 'vllm') {
@@ -196,7 +220,9 @@ function headService(cfg, llm, heart) {
       '    command:',
       ...(share
         ? ['      - "-m"', '      - "/share/${MODEL_FILE:-gguf/' + heart.id + '.gguf}"']
-        : ['      - "-hf"', '      - "${MODEL_NAME:-' + llm.modelVar + '}"']),
+        : lanUrl
+          ? ['      - "-m"', '      - "/models/${MODEL_FILE:-' + heart.id + '.gguf}"']
+          : ['      - "-hf"', '      - "${MODEL_NAME:-' + llm.modelVar + '}"']),
       '      - "--alias"',
       `      - "${heart.id}"`,
       '      - "--jinja"',
@@ -208,7 +234,9 @@ function headService(cfg, llm, heart) {
       '      - "${MAX_CONTEXT:-16384}"',
       ...(g === 'nvidia' ? ['      - "-ngl"', '      - "999"'] : []),
       ...gpuLines(g),
-      ...NET
+      ...(lanUrl ? ['    depends_on:', '      model-fetch:', '        condition: service_completed_successfully'] : []),
+      ...NET,
+      ...(lanUrl ? ['', ...modelFetch('gguf')] : [])
     ];
   }
   return ['  # Cloud Uplink selected: no local inference container. The UI calls ' + llm.baseUrl];
@@ -429,7 +457,32 @@ export function buildStack(rawCfg) {
 
   const volumes = ['ollama_models', 'hf_cache', 'llamacpp_models', 'open_webui_data', 'anythingllm_storage', 'flowise_data', 'n8n_data', 'qdrant_storage', 'uv_cache'];
   let volumesYaml = 'volumes:\n' + volumes.map(v => `  ${v}:`).join('\n') + '\n';
-  if (cfg.sourceId === 'share') {
+  let servicesOut = services;
+  if (cfg.sourceId === 'share' && LAN_MODE === 'url') {
+    const probe = llm.engine === 'ollama' ? '${MODELS_URL}/ollama/' : '${MODELS_URL}/gguf/${MODEL_FILE:-' + heart.id + '.gguf}';
+    servicesOut += [
+      '',
+      '  # Quick check that the LAN model server answers (DNS, certificate, file present).',
+      '  # Only runs when start.* asks for it:  docker compose run --rm share-check',
+      '  share-check:',
+      '    image: curlimages/curl:latest',
+      '    profiles: ["check"]',
+      `    command: ["-sSf", "--max-time", "10", "-r", "0-0", "-o", "/dev/null", "${probe}"]`,
+      ''
+    ].join('\n');
+  } else if (cfg.sourceId === 'share') {
+    servicesOut += [
+      '',
+      '  # Quick check that the LAN model share mounts and is not empty.',
+      '  # Only runs when start.* asks for it:  docker compose run --rm share-check',
+      '  share-check:',
+      '    image: busybox:latest',
+      '    profiles: ["check"]',
+      '    volumes:',
+      '      - shared_models:/share:ro',
+      '    command: ["sh", "-c", "test -n \\"$$(ls -A /share)\\""]',
+      ''
+    ].join('\n');
     volumesYaml += [
       '  # Network model share (read-only). Settings live in .env.',
       '  # NOTE: Docker remembers these options. After changing them run:  docker compose down && docker volume rm ' + '<project>_shared_models',
@@ -444,5 +497,5 @@ export function buildStack(rawCfg) {
   }
   const networksYaml = 'networks:\n  buildabot-net:\n    driver: bridge\n';
 
-  return { cfg, head, heart, body, feet, gpu, source, llm, services, volumesYaml, networksYaml };
+  return { cfg, head, heart, body, feet, gpu, source, llm, services: servicesOut, volumesYaml, networksYaml };
 }

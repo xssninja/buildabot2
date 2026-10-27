@@ -5,6 +5,8 @@ import { renderBotSvg } from './botRenderer.js';
 import { generateBundle } from './dockerGenerator.js';
 import { downloadZipBundle, sendEmailRecipe, decodeConfig, buildShareUrl, openMailtoWithLink, shareZip } from './delivery.js';
 import { glitchAssistant } from './assistant.js';
+import { CONFERENCE } from './conference.js';
+import { ensureSourceAck } from './lanAck.js';
 import { sound } from './sound.js';
 
 // Application State
@@ -16,7 +18,7 @@ const state = {
     heartId: 'qwen3',
     feetId: 'mcp-deck',
     gpuId: 'nvidia',
-    sourceId: 'internet',
+    sourceId: CONFERENCE.enabled ? 'share' : 'internet',
     finishId: 'neon',
     accessories: ['rubber-duck']
   },
@@ -411,7 +413,20 @@ function init() {
   });
 
   // Download .zip from modal or action deck
+  // Ask where models load from (LAN at the conference) before anything leaves the page
+  const confirmSource = async () => {
+    const cfg = await ensureSourceAck(state.botConfig);
+    if (!cfg) return false;
+    if (cfg.sourceId !== state.botConfig.sourceId) {
+      state.botConfig = normalizeConfig(cfg);
+      renderSlots(); updateStats();
+      appendTerminal(`> Model source set to ${cfg.sourceId === 'share' ? 'LAN share' : 'internet'}`);
+    }
+    return true;
+  };
+
   const handleZipDownload = async () => {
+    if (!(await confirmSource())) return;
     sound.playSuccess();
     appendTerminal(`> Packaging ${state.botConfig.name} into .zip archive...`);
     showToast('📦 Bundling Docker files...');
@@ -448,6 +463,7 @@ function init() {
     e.preventDefault();
     const email = el.inputUserEmail.value.trim();
     if (!email) return;
+    if (!(await confirmSource())) return;
 
     sound.playSelect();
     el.emailStatusMsg.textContent = 'Encrypting & streaming package...';

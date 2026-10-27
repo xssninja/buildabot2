@@ -1,5 +1,8 @@
 // Support files generated alongside docker-compose.yml
 import { mcpEndpoints } from './stackBuilder.js';
+import { CONFERENCE, LAN_MODE } from './conference.js';
+
+const FETCH_PY = "\"\"\"Downloads this bot's model from the LAN model server (MODELS_URL).\nResumes interrupted downloads and verifies Ollama blobs by their sha256 name.\"\"\"\nimport hashlib, json, os, sys, time, urllib.error, urllib.request\n\nBASE = os.environ[\"MODELS_URL\"].rstrip(\"/\")\nMODE = os.environ[\"FETCH_MODE\"]  # \"ollama\" or \"gguf\"\n\n\ndef sha256_of(path):\n    h = hashlib.sha256()\n    with open(path, \"rb\") as f:\n        while block := f.read(1 << 20):\n            h.update(block)\n    return h.hexdigest()\n\n\ndef get(url, dest, sha=None):\n    if os.path.exists(dest):\n        print(\"already have\", os.path.basename(dest), flush=True)\n        return\n    os.makedirs(os.path.dirname(dest), exist_ok=True)\n    part = dest + \".part\"\n    for attempt in range(6):\n        have = os.path.getsize(part) if os.path.exists(part) else 0\n        req = urllib.request.Request(url, headers={\"Range\": f\"bytes={have}-\"} if have else {})\n        try:\n            with urllib.request.urlopen(req, timeout=30) as r:\n                if have and r.status != 206:\n                    have = 0  # server ignored the resume request; start over\n                total = have + int(r.headers.get(\"Content-Length\") or 0)\n                done, last = have, 0.0\n                with open(part, \"ab\" if have else \"wb\") as f:\n                    while chunk := r.read(1 << 20):\n                        f.write(chunk)\n                        done += len(chunk)\n                        if total and time.time() - last > 5:\n                            print(f\"  {os.path.basename(dest)}: {done * 100 // total}% of {total // 2**20} MB\", flush=True)\n                            last = time.time()\n            break\n        except urllib.error.HTTPError as e:\n            if e.code == 416:  # nothing left to download\n                break\n            if e.code in (401, 403, 404):\n                sys.exit(f\"LAN model server returned {e.code} for {url}\")\n            print(f\"server error {e.code}, retrying...\", flush=True)\n        except (urllib.error.URLError, OSError) as e:\n            print(f\"connection problem ({e}), retrying...\", flush=True)\n        time.sleep(3 * (attempt + 1))\n    else:\n        sys.exit(f\"Could not download {url}\")\n    if sha and sha256_of(part) != sha:\n        os.remove(part)\n        sys.exit(f\"Checksum mismatch for {url}; run start again to retry\")\n    os.replace(part, dest)\n\n\nif MODE == \"ollama\":\n    name = os.environ[\"MODEL_NAME\"]\n    model, _, tag = name.partition(\":\")\n    tag = tag or \"latest\"\n    if \"/\" not in model:\n        model = \"library/\" + model\n    rel = f\"manifests/registry.ollama.ai/{model}/{tag}\"\n    dst = \"/dest/models\"\n    tmp = f\"/dest/.fetch/{rel}\"\n    get(f\"{BASE}/ollama/{rel}\", tmp)\n    manifest = json.load(open(tmp))\n    for d in [manifest[\"config\"][\"digest\"]] + [layer[\"digest\"] for layer in manifest[\"layers\"]]:\n        blob = d.replace(\":\", \"-\")\n        get(f\"{BASE}/ollama/blobs/{blob}\", f\"{dst}/blobs/{blob}\", sha=d.split(\":\", 1)[1])\n    os.makedirs(os.path.dirname(f\"{dst}/{rel}\"), exist_ok=True)\n    os.replace(tmp, f\"{dst}/{rel}\")  # manifest last, so Ollama only sees complete models\nelse:\n    f = os.environ[\"MODEL_FILE\"]\n    get(f\"{BASE}/gguf/{f}\", f\"/models/{os.path.basename(f)}\")\nprint(\"Model ready from the LAN model server.\", flush=True)\n";
 
 const PY_DOCKERFILE = (port) => `FROM python:3.12-slim
 WORKDIR /app
@@ -77,9 +80,11 @@ if __name__ == "__main__":
 
 export function buildSupportFiles(stack, botName) {
   const { head, heart, body, feet, gpu, llm, cfg } = stack;
-  const share = cfg.sourceId === 'share';
+  const lanUrl = cfg.sourceId === 'share' && LAN_MODE === 'url';
+  const share = cfg.sourceId === 'share' && !lanUrl;
   const eps = mcpEndpoints(cfg);
   const files = {};
+  if (lanUrl) files['model-fetch/fetch.py'] = FETCH_PY;
 
   if (feet.id === 'mcp-deck') {
     files['mcp-servers/web-tools/Dockerfile'] = PY_DOCKERFILE(8811);
@@ -116,6 +121,13 @@ export function buildSupportFiles(stack, botName) {
     `# ${feet.short}`,
     `MCP_PORT=${feet.port}`,
     '',
+    ...(lanUrl ? [
+      '# ---- LAN model server (models download from here, not the internet) ----',
+      '# Folders on the server: ollama/ (blobs + manifests), gguf/ (.gguf files)',
+      `MODELS_URL=${CONFERENCE.modelsUrl}`,
+      llm.engine === 'llamacpp' ? `# .gguf file inside the server's gguf/ folder\nMODEL_FILE=${heart.id}.gguf` : '',
+      ''
+    ] : []),
     ...(share ? [
       '# ---- Network model share (models load from here, not the internet) ----',
       '# SMB/Windows share (default):  MODELS_SHARE=//nas-or-pc-name/models',
@@ -124,8 +136,8 @@ export function buildSupportFiles(stack, botName) {
       '# NFS share:                    SHARE_TYPE=nfs  MODELS_SHARE=:/export/models  SHARE_OPTIONS=addr=192.168.1.50,ro,nfsvers=4',
       '# Folder already on this host:  SHARE_TYPE=none MODELS_SHARE=/path/to/models  SHARE_OPTIONS=bind',
       'SHARE_TYPE=cifs',
-      'MODELS_SHARE=//CHANGE-ME/models',
-      'SHARE_OPTIONS=ro,vers=3.0,guest',
+      `MODELS_SHARE=${CONFERENCE.modelsShare}`,
+      `SHARE_OPTIONS=${CONFERENCE.shareOptions}`,
       llm.engine === 'ollama' ? '# Folder on the share holding the Ollama models dir (blobs/ + manifests/)\nOLLAMA_SHARE_DIR=ollama' : '',
       llm.engine === 'llamacpp' ? `# .gguf file on the share, relative to the share root\nMODEL_FILE=gguf/${heart.id}.gguf` : '',
       llm.engine === 'vllm' ? `# Hugging Face model folder on the share, relative to the share root\nMODEL_DIR=hf/${llm.modelVar.split('/').pop()}` : '',
@@ -164,6 +176,22 @@ echo "========================================================"
 echo "  LAUNCHING: ${botName}"
 echo "========================================================"
 docker info >/dev/null 2>&1 || { echo "Docker is not running."; exit 1; }${gpuCheckSh}
+${share || lanUrl ? `
+# ---- Model source check: fall back to the internet when the LAN share is gone ----
+if ! grep -q '^COMPOSE_FILE=docker-compose.internet.yml' .env; then
+  echo "[MODELS] Checking the LAN model source..."
+  if ! out=$(docker compose run --rm share-check 2>&1); then
+    echo "[MODELS] The LAN model source isn't reachable (or is empty):"
+    echo "$out" | tail -n 3
+    echo "         That's expected after the conference or on another network."
+    read -r -p "Download models from the internet instead? [y/N] " a
+    case "$a" in
+      y|Y) echo 'COMPOSE_FILE=docker-compose.internet.yml' >> .env
+           echo "[MODELS] Switched to internet downloads (see .env to switch back)." ;;
+      *)   echo "Check MODELS_URL / MODELS_SHARE in .env (or connect to the conference network) and run again."; exit 1 ;;
+    esac
+  fi
+fi` : ''}
 mkdir -p workspace
 docker compose up -d --build || { bash ./doctor.sh failed; exit 1; }${gpuVerifySh}
 echo ""
@@ -185,6 +213,23 @@ echo   LAUNCHING: ${botName}
 echo ========================================================
 docker info >nul 2>&1 || (echo Docker Desktop is not running. & pause & exit /b 1)
 ${gpu.id === 'nvidia' && llm.service ? `where nvidia-smi >nul 2>&1 && (echo [GPU] Host GPU: & nvidia-smi --query-gpu=name,memory.total --format=csv,noheader) || echo [GPU] WARNING: nvidia-smi not found - install the NVIDIA driver, or rebuild with CPU only.` : ''}
+${share || lanUrl ? `
+rem ---- Model source check: fall back to the internet when the LAN share is gone ----
+findstr /b /c:"COMPOSE_FILE=docker-compose.internet.yml" .env >nul && goto models_ok
+echo [MODELS] Checking the LAN model source...
+docker compose run --rm share-check
+if not errorlevel 1 goto models_ok
+echo [MODELS] The LAN model source isn't reachable, or is empty - see the message above.
+echo          That's expected after the conference or on another network.
+choice /m "Download models from the internet instead"
+if errorlevel 2 (
+  echo Check MODELS_URL / MODELS_SHARE in .env, or connect to the conference network, and run again.
+  pause
+  exit /b 1
+)
+>>.env echo COMPOSE_FILE=docker-compose.internet.yml
+echo [MODELS] Switched to internet downloads - see .env to switch back.
+:models_ok` : ''}
 if not exist workspace mkdir workspace
 docker compose up -d --build || (call doctor.bat failed & pause & exit /b 1)
 ${gpu.id === 'nvidia' && llm.service ? `echo [GPU] Checking the GPU is visible inside ${llm.container}...
@@ -301,7 +346,13 @@ if !errorlevel! equ 0 (
 ${gpu.id === 'nvidia' ? '   - NVIDIA: current NVIDIA driver. Windows needs Docker Desktop with the **WSL2** backend. Linux needs the **NVIDIA Container Toolkit**.\n' : ''}${gpu.id === 'amd' ? '   - AMD: Linux host with ROCm drivers (`/dev/kfd` and `/dev/dri` must exist). Docker Desktop on Windows/macOS cannot pass AMD GPUs through.\n' : ''}${llm.engine === 'cloud' ? `   - Put your \`${llm.keyVar}\` in \`.env\`.\n` : ''}2. Run \`start.bat\` (Windows) or \`./start.sh\` (Linux/macOS).
 3. Open **http://localhost:3000** (or the \`UI_PORT\` in \`.env\`).
 ${llm.engine !== 'cloud' ? '\nThe first start downloads the model (several GB). The UI may show no models until that finishes.\n' : ''}
-${share ? `## 🗄️ Models from your network share
+${lanUrl ? `## 🗄️ Models from the LAN model server
+
+No model weights come from the internet. On first start, \`model-fetch\` downloads ${llm.engine === 'ollama' ? `\`${llm.modelVar}\`` : `\`gguf/${heart.id}.gguf\``} from \`${CONFERENCE.modelsUrl}\` (set as \`MODELS_URL\` in \`.env\`) into this bot's own storage. Interrupted downloads resume, ${llm.engine === 'ollama' ? 'and every file is checksum-verified' : 'and the file is reused on later starts'}. Watch progress: \`docker compose logs -f model-fetch\`.
+
+**After the conference:** if the server can't be reached, \`start\` shows the error (DNS, certificate or missing file) and offers to download from the internet instead. It remembers that by adding \`COMPOSE_FILE=docker-compose.internet.yml\` to \`.env\`. Delete that line to go back.
+
+` : ''}${share ? `## 🗄️ Models from your network share
 
 No model weights are downloaded from the internet. Set \`MODELS_SHARE\` (and login options if needed) in \`.env\`. Expected layout on the share:
 
@@ -313,6 +364,8 @@ models/
 \`\`\`
 
 ${llm.engine === 'ollama' ? `- **Ollama:** \`MODEL_NAME\` (\`${llm.modelVar}\`) must exist in \`ollama/\`. On first start, \`ollama-seed\` copies just that model into this bot's storage. The share is never written to. To fill the share, copy \`%USERPROFILE%\\.ollama\\models\` (Windows) or \`~/.ollama/models\` from a machine that already pulled the model.` : ''}${llm.engine === 'llamacpp' ? `- **llama.cpp:** set \`MODEL_FILE\` to the .gguf path on the share. Any GGUF works, including one downloaded from Hugging Face.` : ''}${llm.engine === 'vllm' ? `- **vLLM:** set \`MODEL_DIR\` to a full Hugging Face model folder (config.json, tokenizer files and *.safetensors), e.g. from \`hf download ${llm.modelVar} --local-dir hf/${llm.modelVar.split('/').pop()}\`. vLLM runs in offline mode. It can't use Ollama or GGUF files.` : ''}
+
+**After the conference:** if the share can't be reached, \`start\` offers to download models from the internet instead and remembers it by adding \`COMPOSE_FILE=docker-compose.internet.yml\` to \`.env\`. Delete that line to go back to the share.
 
 Check the share mounted: \`docker compose logs ${llm.engine === 'ollama' ? 'ollama-seed' : llm.service}\`. After changing share settings, run \`docker compose down\` then \`docker volume rm <project>_shared_models\` so Docker re-reads them.
 

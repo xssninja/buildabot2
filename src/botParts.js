@@ -1,3 +1,5 @@
+import { LAN_MODE } from './conference.js';
+
 // Component Catalog for Build-A-Bot: The Cybernetic AI Deployment Fabricator
 //
 // Every part here maps to a REAL, published container image (or a small
@@ -357,9 +359,9 @@ export const SOURCE_PARTS = [
     id: 'internet',
     name: 'Internet Download',
     short: 'Internet',
-    badge: 'Ollama registry / Hugging Face',
+    badge: 'Not on conference Wi-Fi',
     icon: '🌍',
-    funnyLore: 'Downloads the model on first start. Simple, but needs a few GB of internet bandwidth.',
+    funnyLore: 'Downloads several GB on first start. Use at home, NOT at the conference.',
     cuteness: 90,
     ctfProwess: 90
   },
@@ -367,7 +369,7 @@ export const SOURCE_PARTS = [
     id: 'share',
     name: 'Network Share (SMB / NFS / folder)',
     short: 'Network share',
-    badge: 'No model downloads from the internet',
+    badge: 'USE THIS AT THE CONFERENCE',
     icon: '🗄️',
     funnyLore: 'Loads models from a shared folder on your network. Set the share path in .env.',
     technicalRole: 'Ollama: ollama/ folder (blobs + manifests). llama.cpp: a .gguf file. vLLM: a Hugging Face model folder.',
@@ -418,6 +420,8 @@ export function normalizeConfig(config) {
   if (!SOURCE_PARTS.some(s => s.id === cfg.sourceId)) cfg.sourceId = 'internet';
   if (!FINISH_PARTS.some(f => f.id === cfg.finishId)) cfg.finishId = 'neon';
   if (head.engine === 'cloud') cfg.sourceId = 'internet';
+  // vLLM needs a full Hugging Face folder, which the LAN web server can't provide
+  if (head.engine === 'vllm' && cfg.sourceId === 'share' && LAN_MODE === 'url') cfg.sourceId = 'internet';
   cfg.bodyId = findPart(BODY_PARTS, cfg.bodyId).id;
   cfg.feetId = findPart(FEET_PARTS, cfg.feetId).id;
   return cfg;
