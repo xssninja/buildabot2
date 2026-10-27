@@ -1203,3 +1203,7 @@ body {
 
 /* Light finishes: dark outline keeps small neon labels readable */
 .finish-pastel text, .finish-holo text { paint-order: stroke; stroke: #0b0f19; stroke-width: 2.5px; stroke-linejoin: round; }
+
+/* Feature temporarily switched off: greyed out but still clickable to explain why */
+.btn-secondary-action.is-unavailable { opacity: .45; filter: grayscale(1); cursor: not-allowed; }
+.btn-secondary-action.is-unavailable:hover { transform: none; }

@@ -3,6 +3,8 @@
 // download/email requires the user to acknowledge where models will load from.
 export const CONFERENCE = {
   enabled: true,
+  // Email delivery is switched off for now: the button is greyed out and explains why.
+  emailEnabled: false,
   name: 'the conference',
   // LAN web server that holds the models (folders: ollama/, gguf/, hf/).
   // When set, bundles download models from here instead of mounting a share.

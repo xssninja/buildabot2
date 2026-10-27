@@ -451,7 +451,19 @@ function init() {
   });
 
   // Email Modal
-  document.getElementById('btn-email-modal').addEventListener('click', () => {
+  const emailBtn = document.getElementById('btn-email-modal');
+  if (!CONFERENCE.emailEnabled) {
+    emailBtn.classList.add('is-unavailable');
+    emailBtn.setAttribute('aria-disabled', 'true');
+    emailBtn.title = 'Email delivery is temporarily down';
+    emailBtn.querySelector('span').textContent = '📧 Email (temporarily down)';
+  }
+  emailBtn.addEventListener('click', () => {
+    if (!CONFERENCE.emailEnabled) {
+      showToast('📧 Email delivery is temporarily down. Please open Build-A-Bot on your own computer and use "Instant .zip Download" instead.', 8000);
+      appendTerminal('> Email dispatch offline. Use Instant .zip Download on your own machine.');
+      return;
+    }
     el.emailStatusMsg.textContent = '';
     el.emailModal.classList.add('active');
     sound.playSelect();
