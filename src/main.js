@@ -7,6 +7,8 @@ import { downloadZipBundle, sendEmailRecipe, decodeConfig, buildShareUrl, openMa
 import { glitchAssistant } from './assistant.js';
 import { CONFERENCE } from './conference.js';
 import { ensureSourceAck } from './lanAck.js';
+import { ensureDockerAck } from './dockerAck.js';
+import { showBetaBanner } from './betaBanner.js';
 import { sound } from './sound.js';
 
 // Application State
@@ -301,6 +303,7 @@ function refreshBlueprintModal() {
 
 // Initial Wire-Up
 function init() {
+  showBetaBanner('The Build-A-Bot workshop is in beta. Bundles may need a tweak or two; if a build fails, run the doctor script it includes.');
   // Initial Render
   el.botNameDisplay.textContent = state.botConfig.name;
   renderSlots();
@@ -422,7 +425,7 @@ function init() {
       renderSlots(); updateStats();
       appendTerminal(`> Model source set to ${cfg.sourceId === 'share' ? 'LAN share' : 'internet'}`);
     }
-    return true;
+    return ensureDockerAck(state.botConfig);
   };
 
   const handleZipDownload = async () => {

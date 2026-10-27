@@ -5,6 +5,8 @@ import { renderBotSvg } from './botRenderer.js';
 import { downloadZipBundle, encodeConfig } from './delivery.js';
 import { CONFERENCE } from './conference.js';
 import { ensureSourceAck } from './lanAck.js';
+import { ensureDockerAck } from './dockerAck.js';
+import { showBetaBanner } from './betaBanner.js';
 
 // Old share links pointed at "/?bot=..." – send them to the workshop
 if (new URLSearchParams(location.search).has('bot')) {
@@ -77,8 +79,10 @@ document.getElementById('g-download').addEventListener('click', async e => {
     const cfg = await ensureSourceAck(config);
     if (!cfg) return;
     config = cfg; render();
+    if (!(await ensureDockerAck(config))) return;
     await downloadZipBundle(config);
   } finally { btn.disabled = false; }
 });
 
+showBetaBanner('Build-A-Bot and the Docker Gacha are in beta. Bundles may need a tweak or two; if a build fails, run the doctor script it includes.');
 roll();
